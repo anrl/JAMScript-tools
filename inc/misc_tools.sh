@@ -10,7 +10,7 @@ die() {
 # We use the global variable 'result' to pass parameter values back
 #
 
-
+#
 # Call like the following
 # inc_counter counter_name
 # the counter_name is a file location
@@ -19,15 +19,17 @@ inc_counter() {
     local counter=$1
     local value
 
+    echo "Counter: " $counter
     if [ -e $counter ]; then
         value=`cat $counter`
-        result=$value
         ((value++))
+        result=$value
     else
         value=1
         result=1
     fi
     echo $value > $counter
+    sync
 }
 
 # set_counter 10 $jamfolder/global/count
@@ -37,7 +39,8 @@ set_counter() {
 
     if [ ! -e $counter ]; then
         echo $value > $counter
-    fi 
+    fi
+    sync
 }
 
 
@@ -57,6 +60,7 @@ dec_counter() {
         echo $value > $counter
     fi
     result=$value
+    sync
 }
 
 # save_no_overwrite value location
@@ -73,6 +77,7 @@ save_no_overwrite() {
             echo $value > $location
         fi
     fi
+    sync
 }
 
 # save value location
@@ -82,6 +87,7 @@ save() {
     local location=$2
 
     echo $value > $location
+    sync
 }
 
 

@@ -44,19 +44,24 @@ startzonemach() {
     local netname=$3
     local subnet=$4
 
+    local present
+
     create_missingdir $jamfolder/zones/$zonenum
     while : ; do
         inc_counter $jamfolder/zones/$zonenum/count
         local count=$result
-        echo "-------------------------- IP " 10.$subnet.$zonenum.$count
+        echo "-------------------------- IP " 10.$subnet.$zonenum.$count "---- machname --- " $machname
         # Create the machine
         dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN $dockerImage`
+        if [ $? != 0 ]; then
+            present=0
+            docker rm $machname
+        else
+            present=1
+        fi
         dockerSer=${dockerSer:0:12}
         result=$dockerSer
-
-        local present=`docker ps -a --filter name=$machname | grep $machname | wc -l`
-        if [ $present == "1" ]; then break fi
-        echo "Retrying........................................."
+        if [ $present == 1 ]; then break; fi
     done
 
     # Setup the routes
@@ -72,6 +77,8 @@ startglobalmach() {
     local netname=$2
     local subnet=$3
 
+    local present
+
     create_missingdir $jamfolder/global
     set_counter 10 $jamfolder/global/count
     while : ; do
@@ -81,9 +88,12 @@ startglobalmach() {
 
         # Create the machine
         docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage
-
-        local present=`docker ps -a --filter name=$machname | grep $machname | wc -l`
-        if [ $present == "1" ]; then break fi
-        echo "Retrying........................................."
+        if [ $? != 0 ]; then
+            present=0
+            docker rm $machname
+        else
+            present=1
+        fi
+        if [ $present == 1 ]; then break; fi
     done
 }

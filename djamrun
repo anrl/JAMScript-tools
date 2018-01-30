@@ -224,7 +224,7 @@ make_container() {
 
     if [ $type == "cloud" ]; then
         startglobalmach $contname jamnet 10
-        restartcloudpumba $contname
+    #    restartcloudpumba $contname
     else
         exit_missingfile $jamfolder/zones/count
         local zcount=`cat $jamfolder/zones/count`
@@ -234,9 +234,9 @@ make_container() {
         local zone=$(( $RANDOM % $zcount ))
 
         startzonemach $zone $contname jamnet 10
-        if [ $type == "fog" ]; then
-            restartfogpumba $contname
-        fi
+        #if [ $type == "fog" ]; then
+        #    restartfogpumba $contname
+        #fi
     fi
 
     save $result $jamfolder/$type/$contname/dockerId
@@ -258,7 +258,7 @@ createzonerouters() {
     for i in `seq 1 $zcount`; do
         echo "I= "$i
         startzonerouter $i "u-$UID-router-$i" jamnet 10
-        restartrouterpumba "u-$UID-router-$i"
+    #    restartrouterpumba "u-$UID-router-$i"
     done
 }
 
