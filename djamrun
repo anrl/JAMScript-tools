@@ -447,7 +447,10 @@ if [ "$type" != "device" ] && [ -n "$num" ]; then
 fi
 
 # If docker is not installed, we fail here
-checkdocker
+check_prog docker "Docker not installed. Exiting."
+check_prog pumba "Pumba not installed. Download it from https://github.com/gaia-adm/pumba/releases"
+check_prog tmux "tmux not installed. Exiting."
+
 # Check whether the global __jamruns folder is there
 jamfolder=$HOME"/__jamruns"
 exit_missingdir $jamfolder "__jamdir directory not found. Run djam pull first. "

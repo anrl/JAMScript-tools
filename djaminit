@@ -4,7 +4,6 @@ IDIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$IDIR" ]]; then IDIR="$PWD"; fi
 source "$IDIR/inc/pumba_tools.sh"
 source "$IDIR/inc/misc_tools.sh"
-source "$IDIR/inc/docker_tools.sh"
 
 
 
