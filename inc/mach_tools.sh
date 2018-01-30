@@ -52,9 +52,9 @@ startzonemach() {
     while : ; do
         inc_counter $jamfolder/zones/$zonenum/count
         local count=$result
-        newcount=expr $count % 254
+        newcount=$(( $count % 254 ))
         if [ $newcount != $count ]; then
-            count=expr $newcount + 1
+            count=$(( $newcount + 1 ))
         fi
 
         echo "-------------------------- IP " 10.$subnet.$zonenum.$count "---- machname --- " $machname
@@ -92,11 +92,11 @@ startglobalmach() {
         # Above command runs if the counter is not already set
         inc_counter $jamfolder/global/count
         local count=$result
-        newcount=expr $count % 254
+        newcount=$(( $count % 254 ))
         if [ $newcount != $count ]; then
-            count=expr $newcount + 1
+            count=$(( $newcount + 1 ))
         fi
-        
+
         # Create the machine
         docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage
         if [ $? != 0 ]; then
