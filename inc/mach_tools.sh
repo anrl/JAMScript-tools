@@ -45,15 +45,19 @@ startzonemach() {
     local subnet=$4
 
     create_missingdir $jamfolder/zones/$zonenum
-    inc_counter $jamfolder/zones/$zonenum/count
-    local count=$result
+    while : ; do
+        inc_counter $jamfolder/zones/$zonenum/count
+        local count=$result
+        echo "-------------------------- IP " 10.$subnet.$zonenum.$count
+        # Create the machine
+        dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN $dockerImage`
+        dockerSer=${dockerSer:0:12}
+        result=$dockerSer
 
-    echo "-------------------------- IP " 10.$subnet.$zonenum.$count
-
-    # Create the machine
-    dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN $dockerImage`
-    dockerSer=${dockerSer:0:12}
-    result=$dockerSer
+        local present=`docker ps -a --filter name=$machname | grep $machname | wc -l`
+        if [ $present == "1" ]; then break fi
+        echo "Retrying........................................."
+    done
 
     # Setup the routes
     docker exec -d $machname ip route del 10.$subnet/16
@@ -70,11 +74,16 @@ startglobalmach() {
 
     create_missingdir $jamfolder/global
     set_counter 10 $jamfolder/global/count
-    # Above command runs if the counter is not already set
-    inc_counter $jamfolder/global/count
-    local count=$result
+    while : ; do
+        # Above command runs if the counter is not already set
+        inc_counter $jamfolder/global/count
+        local count=$result
 
-    # Create the machine
-    docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage
+        # Create the machine
+        docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage
 
+        local present=`docker ps -a --filter name=$machname | grep $machname | wc -l`
+        if [ $present == "1" ]; then break fi
+        echo "Retrying........................................."
+    done
 }
