@@ -16,6 +16,8 @@ createnetwork() {
 
 # for example, call like
 # startzonerouter zonenum jamtest 54
+# TODO: See whether this can actually fail due to address reuse problem..
+# If so, we need to use another address... and save it in the jamrun state.
 #
 startzonerouter() {
     local zonenum=$1
@@ -50,6 +52,11 @@ startzonemach() {
     while : ; do
         inc_counter $jamfolder/zones/$zonenum/count
         local count=$result
+        newcount=expr $count % 254
+        if [ $newcount != $count ]; then
+            count=expr $newcount + 1
+        fi
+
         echo "-------------------------- IP " 10.$subnet.$zonenum.$count "---- machname --- " $machname
         # Create the machine
         dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN $dockerImage`
@@ -85,7 +92,11 @@ startglobalmach() {
         # Above command runs if the counter is not already set
         inc_counter $jamfolder/global/count
         local count=$result
-
+        newcount=expr $count % 254
+        if [ $newcount != $count ]; then
+            count=expr $newcount + 1
+        fi
+        
         # Create the machine
         docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage
         if [ $? != 0 ]; then
