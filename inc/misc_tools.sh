@@ -129,3 +129,23 @@ check_prog() {
         exit 0
     fi
 }
+
+# Check the Program
+# If the program is not there.. check the alt.
+# Print error and exit if the alt is missing as well
+#
+check_set_check_prog() {
+    prog=$1
+    local msg=$2
+    altprog=$3
+
+    local present=`which $prog`
+    if [ -z $present ]; then
+        prog=$altprog
+        local present=`which $prog`
+        if [ -z $present ]; then
+            echo $msg
+            exit 0
+        fi
+    fi
+}
