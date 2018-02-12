@@ -4,6 +4,14 @@ IDIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$IDIR" ]]; then IDIR="$PWD"; fi
 source "$IDIR/inc/misc_tools.sh"
 
+SHELLPID=$$
+trap cleanup SIGTERM SIGINT
+
+die() {
+    printf '%s\n' "$1" >&2
+    exit 1
+}
+
 
 #check_set_check_prog MOSQUITTO "mosquitto broker missing." /usr/local/sbin/mosquitto
 #check_set_check_prog MOSQUITTO_PUB "mosquitto Pub tool missing." /usr/local/sbin/mosquitto_pub
@@ -11,15 +19,10 @@ MOSQUITTO=/usr/local/sbin/mosquitto
 MOSQUITTO_PUB=/usr/local/sbin/mosquitto_pub
 TMUX=`which tmux`
 
+if [ -z $TMUX ]; then
+    die "tmux not installed. Quitting."
+fi
 
-# No need to edit below this line unless you find a bug!
-## Some functions used in this script
-
-
-die() {
-    printf '%s\n' "$1" >&2
-    exit 1
-}
 
 show_usage() {
     cat << EOF
@@ -73,7 +76,14 @@ startmqtt() {
     fi
 }
 
+
 dojamout() {
+    dojamout_p1 $1 $2 $3
+    dojamout_p2 $1 $2 $3
+}
+
+
+dojamout_p1() {
     local type=$1
     local pnum=$2
     local floc=$3
@@ -81,6 +91,65 @@ dojamout() {
     startmqtt $pnum
     echo $data > $floc/$pnum/dataStore
     echo "process" > $floc/$pnum/class
+    echo $SHELLPID > $floc/$pnum/shellpid
+}
+
+
+dojamout_p2() {
+
+    if [ -z $bg ]; then
+        dojamout_p2_fg $1 $2 $3
+    else
+        dojamout_p2_bg $1 $2 $3
+    fi
+}
+
+
+cleanup() {
+    reset
+    cleanuptmux
+    exit 1
+}
+
+
+dojamout_p2_fg() {
+    local type=$1
+    local pnum=$2
+    local floc=$3
+
+
+
+    case $type in
+        cloud)
+            if [ -z "$tags" ]; then
+                node jamout.js --app=$jappid --cloud --port=$pnum --data=$data
+            else
+                node jamout.js --app=$jappid --cloud --port=$pnum --data=$data --tags=$tags
+            fi
+            ;;
+        fog)
+            if [ -z "$tags" ]; then
+                node jamout.js --app=$jappid --fog --port=$pnum --data=$data
+            else
+                node jamout.js --app=$jappid --fog --port=$pnum --data=$data --tags=$tags
+            fi
+            ;;
+        device)
+            if [ -z "$tags" ]; then
+                node jamout.js --app=$jappid --port=$pnum --data=$data
+            else
+                node jamout.js --app=$jappid --port=$pnum --data=$data --tags=$tags
+            fi
+            ;;
+    esac
+}
+
+
+
+dojamout_p2_bg() {
+    local type=$1
+    local pnum=$2
+    local floc=$3
 
     case $type in
         cloud)
@@ -112,6 +181,8 @@ dojamout() {
             ;;
     esac
 }
+
+
 
 doaout() {
     local counter=1
@@ -156,8 +227,9 @@ portavailable() {
 
 
 setuptmux() {
-    tmuxapp="tg-"$1
-    echo $tmuxapp > $2/tmuxid
+
+    tmuxapp="tg-$RANDOM"
+    echo $tmuxapp > $1/tmuxid
 
     if [ "$type" == "device" ]; then
         $TMUX new -s $tmuxapp -d
@@ -168,6 +240,7 @@ setuptmux() {
             ((counter++))
         done
     fi
+    trap cleanuptmux SIGINT
 }
 
 
@@ -204,14 +277,6 @@ cleanuptmux() {
     exit
 }
 
-
-waitforcmd() {
-
-    if [ -z $bg ]; then
-        trap cleanuptmux SIGINT
-        wait $jpid
-    fi
-}
 
 startredis() {
     local port=$1
@@ -423,7 +488,6 @@ if [ -e "$file" ]; then
                 getappid $jamfolder $folder $app
                 create_missingdir $folder/$iport
                 dojamout $type $iport $folder
-                waitforcmd
             ;;
             fog)
                 iport=5883
@@ -435,7 +499,6 @@ if [ -e "$file" ]; then
                 getappid $jamfolder $folder $app
                 create_missingdir $folder/$iport
                 dojamout $type $iport $folder
-                waitforcmd
             ;;
             device)
                 iport=1883
@@ -448,10 +511,11 @@ if [ -e "$file" ]; then
                 done
                 getappid $jamfolder $folder $app
                 create_missingdir $folder/$iport
-                dojamout $type $iport $folder
-                setuptmux $jpid $folder/$iport
+                dojamout_p1 $type $iport $folder
+                setuptmux $folder/$iport
                 doaout $num $iport
-                waitforcmd
+                dojamout_p2 $type $iport $folder
+                cleanuptmux
             ;;
         esac
     else

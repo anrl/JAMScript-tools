@@ -41,6 +41,15 @@ killtmux() {
 }
 
 killprocess() {
+
+    if [ -e $1/shellpid ]; then
+        local pid=`cat $1/shellpid`
+        local present=`ps -p $pid | grep jamrun | wc -l`
+        if [ $present == "1" ]; then
+            kill $pid
+        fi
+    fi
+
     if [ -e $1/processId ]; then
         local pid=`cat $1/processId`
         local present=`ps -p $pid | grep node | wc -l`
