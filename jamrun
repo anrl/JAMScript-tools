@@ -157,7 +157,7 @@ portavailable() {
 
 setuptmux() {
     tmuxapp="tg-"$1
-    echo $tmuxapp > $dirpath/tmuxid
+    echo $tmuxapp > $2/tmuxid
 
     if [ "$type" == "device" ]; then
         $TMUX new -s $tmuxapp -d
@@ -170,16 +170,6 @@ setuptmux() {
     fi
 }
 
-createdir() {
-    local jpath=$1
-    local jdir=$2
-    # set a global directory..
-    dirpath=$jpath/$jdir
-
-    if [ ! -e $jpath/$jdir ]; then
-        mkdir $jpath/$jdir
-    fi
-}
 
 getappid() {
     local mainf=$1
@@ -397,15 +387,16 @@ if [ -e "$file" ]; then
 
     # Check whether the global __jamruns folder is there
     jamfolder=$HOME"/__jamruns"
-    if [ ! -d $jamfolder ]; then
-        mkdir $jamfolder
-    fi
+    create_missingdir $jamfolder
+
+    # Check whether the app folder is there
+    appfolder=$jamfolder/apps
+    create_missingdir $appfolder
+
     # Get the folder
     filenoext="${file%.*}"
-    folder=$HOME"/__jamruns/"$filenoext"_"$app
-    if [ ! -d "$folder" ]; then
-        mkdir $folder
-    fi
+    folder=$appfolder/$filenoext"_"$app
+    create_missingdir $folder
 
     # unzip the executable in the folder and run it..
     # We are unzipping the copying the files no matter what!
@@ -430,7 +421,7 @@ if [ -e "$file" ]; then
                     ((iport++))
                 done
                 getappid $jamfolder $folder $app
-                createdir $folder $iport
+                create_missingdir $folder/$iport
                 dojamout $type $iport $folder
                 waitforcmd
             ;;
@@ -442,7 +433,7 @@ if [ -e "$file" ]; then
                     ((iport++))
                 done
                 getappid $jamfolder $folder $app
-                createdir $folder $iport
+                create_missingdir $folder/$iport
                 dojamout $type $iport $folder
                 waitforcmd
             ;;
@@ -456,9 +447,9 @@ if [ -e "$file" ]; then
                     ((iport++))
                 done
                 getappid $jamfolder $folder $app
-                createdir $folder $iport
+                create_missingdir $folder/$iport
                 dojamout $type $iport $folder
-                setuptmux $jpid
+                setuptmux $jpid $folder/$iport
                 doaout $num $iport
                 waitforcmd
             ;;
