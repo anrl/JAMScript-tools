@@ -53,10 +53,15 @@ jamrun program.jxe --tag="param1, param2"
 
 Use the --bg option to run a command in the backgroud.
 
+Use the --old option to run the previous version in __jamruns folder.
+You can edit that version and rerun a custom version of a file.
+
+
 Usage: jamrun file.jxe [--app=appl_name] [--fog|--cloud] [--num=num_c_devs]
                                     [--data=data-url]
                                     [--tags=quoted_list_of_tags]
                                     [--bg]
+                                    [--old]
 
 
 The jamrun command creates a run state in the $HOME/__jamrun folder.
@@ -330,6 +335,7 @@ data=127.0.0.1:6379
 num=1
 tags=
 bg=
+old=
 porttaken=0
 
 file=$1
@@ -427,6 +433,9 @@ while :; do
         -b|--bg)
             bg=1
             ;;
+        -o|--old)
+            old=1
+            ;;
         --)              # End of all options.
             shift
             break
@@ -463,11 +472,13 @@ if [ -e "$file" ]; then
     folder=$appfolder/$filenoext"_"$app
     create_missingdir $folder
 
-    # unzip the executable in the folder and run it..
-    # We are unzipping the copying the files no matter what!
-    unzip -oq $file -d $folder
-    if [ $? -ne 0 ]; then
-        die "Problem reading file: $file"
+    if [ -z $old ]; then
+        # unzip the executable in the folder and run it..
+        # We are unzipping the copying the files no matter what!
+        unzip -oq $file -d $folder
+        if [ $? -ne 0 ]; then
+            die "Problem reading file: $file"
+        fi
     fi
 
     cd $folder
