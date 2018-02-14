@@ -14,9 +14,13 @@ die() {
 show_usage() {
     cat << EOF
 
-djamexec file.jxe --target=program --app=appl_name
+djamexec --target=program --app=appl_name command
 
-This command will execute the file.jxe in the docker containers that are already
+NOTE: here the command is at the end!
+
+"command" could be file.jxe or some Linux command (e.g., ls) with arguments.
+
+This "command" will be executed in the docker containers that are already
 running the target program under the given application name (appl_name).
 
 If no running instance is found, an error message will be printed.
@@ -46,8 +50,6 @@ checkdocker() {
 
 app=
 target=
-file=$1
-shift
 
 while :; do
     case $1 in
@@ -98,9 +100,12 @@ while :; do
     shift
 done
 
+file=$1
+shift
+rest=$*
 
 # Check folder
-jamfolder=$HOME"/__jamruns"
+jamfolder=$HOME"/__jamruns/apps"
 if [ ! -d $jamfolder ]; then
     die "ERROR! No running instance found. "
 fi
@@ -111,6 +116,8 @@ fi
 
 tname="${target%.*}"
 tname=$tname"_"$app
+fext="${file##*.}"
+
 
 if [ "$(ls -A $jamfolder)" ]; then
 
@@ -126,13 +133,25 @@ if [ "$(ls -A $jamfolder)" ]; then
                 runon=`cat $dir/dockerId`
                 case $type in
                     cloud)
-                        djamrun $file --app=$app --cloud --data=$data --runon=$runon
+                        if [ $fext == "jxe" ]; then
+                            djamrun $file --app=$app --cloud --data=$data --runon=$runon
+                        else
+                            docker exec -it $runon $file $rest
+                        fi
                     ;;
                     fog)
-                        djamrun $file --app=$app --fog --data=$data --runon=$runon
+                        if [ $fext == "jxe" ]; then
+                            djamrun $file --app=$app --fog --data=$data --runon=$runon
+                        else
+                            docker exec -it $runon $file $rest
+                        fi
                     ;;
                     device)
-                        djamrun $file --app=$app  --data=$data --runon=$runon --num=`cat $dir/cdevs`
+                        if [ $fext == "jxe" ]; then
+                            djamrun $file --app=$app  --data=$data --runon=$runon --num=`cat $dir/cdevs`
+                        else
+                            docker exec -it $runon $file $rest
+                        fi
                     ;;
                 esac
             fi
