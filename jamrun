@@ -117,12 +117,19 @@ cleanup() {
 }
 
 
+check_jamhome() {
+
+    if [ -e jview.json ]; then
+        if [ -z `printenv JAMHOME` ]; then
+            die "JAMHOME not set. Point JAMHOME to JAMScript installation and restart."
+        fi
+    fi
+}
+
 dojamout_p2_fg() {
     local type=$1
     local pnum=$2
     local floc=$3
-
-
 
     case $type in
         cloud)
@@ -140,11 +147,23 @@ dojamout_p2_fg() {
             fi
             ;;
         device)
+            check_jamhome
+            (
+                node $JAMHOME/lib/jview/Compiler.js jview.json
+                cp -R $JAMHOME/lib/jview/templates/electron electron
+                cd app
+                node index.js &
+                sleep 2
+                cd ../electron
+                electron .
+            ) &
+            echo $! > $floc/$pnum/jviewshell
             if [ -z "$tags" ]; then
                 node jamout.js --app=$jappid --port=$pnum --data=$data
             else
                 node jamout.js --app=$jappid --port=$pnum --data=$data --tags=$tags
             fi
+            kill `cat $floc/$pnum/jviewshell`
             ;;
     esac
 }
