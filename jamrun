@@ -149,13 +149,15 @@ dojamout_p2_fg() {
         device)
             check_jamhome
             (
-                node $JAMHOME/lib/jview/Compiler.js jview.json
-                cp -R $JAMHOME/lib/jview/templates/electron electron
-                cd app
-                node index.js &
-                sleep 2
-                cd ../electron
-                electron .
+                if [ -e jview.json ]; then
+                    node $JAMHOME/lib/jview/Compiler.js jview.json
+                    cp -R $JAMHOME/lib/jview/templates/electron electron
+                    cd app
+                    node index.js &
+                    sleep 2
+                    cd ../electron
+                    electron .
+                fi
             ) &
             echo $! > $floc/$pnum/jviewshell
             if [ -z "$tags" ]; then
