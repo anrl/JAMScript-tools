@@ -40,7 +40,11 @@ make_container() {
     # Check if the build container is running..
     present=`docker ps --filter name=$contname | grep $contname | wc -l`
     if [ $present == "0" ]; then
-        # Otherwise spawn one
+        # Otherwise check if an older run is there..
+        present=`docker ps -a --filter name=$contname | grep $contname | wc -l`
+        if [ $present == "1" ]; then
+            docker rm $contname
+        fi
         local dockerSer=`docker run -it -d --privileged --name $contname $dockerImage`
         local dockerSer=${dockerSer:0:12}
         echo $dockerSer > $jamfolder/type/contname/dockerId
