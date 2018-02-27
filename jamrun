@@ -97,6 +97,7 @@ dojamout_p1() {
     echo $data > $floc/$pnum/dataStore
     echo "process" > $floc/$pnum/class
     echo $SHELLPID > $floc/$pnum/shellpid
+    echo "new" > $floc/$pnum/processId
 }
 
 
@@ -237,7 +238,9 @@ portavailable() {
     if [ -d $folder/$port ]; then
         if [ -e $folder/$port/processId ]; then
             local pid=`cat $folder/$port/processId`
-            if [ ! -z $pid ]; then
+            if [ $pid == "new" ]; then
+                porttaken=1
+            elif [ ! -z $pid ]; then
                 porttaken=`ps -p $pid | grep node | wc -l`
             else
                 porttaken=0
