@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# djam exec file --target=prog --app=app_name
+# djam exec file --program=prog --app=app_name --type=node_type
 
 # We reuse the containers of the existing program run: MQTT, Redis and all ports
 # need to be the same.
@@ -14,7 +14,7 @@ die() {
 show_usage() {
     cat << EOF
 
-djamexec --target=program --app=appl_name command
+djamexec --program=program --app=appl_name --type=node_type command
 
 NOTE: here the command is at the end!
 
@@ -49,7 +49,8 @@ checkdocker() {
 
 
 app=
-target=
+program=
+type=
 
 while :; do
     case $1 in
@@ -71,20 +72,33 @@ while :; do
         --app=)             # Handle the case of an empty
             die 'ERROR: "--app" requires a non-empty option argument.'
             ;;
-
-        -t|--target)           # Takes an option argument; ensure it has been specified.
+        -p|--program)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
-                target=$2
+                program=$2
                 shift
             else
-                die 'ERROR: "--target" requires a non-empty option argument.'
+                die 'ERROR: "--program" requires a non-empty option argument.'
             fi
             ;;
-        --target=?*)
-            target=${1#*=}     # Delete everything up to "=" and assign the remainder.
+        --program=?*)
+            program=${1#*=}     # Delete everything up to "=" and assign the remainder.
             ;;
-        --target=)             # Handle the case of an empty
-            die 'ERROR: "--target" requires a non-empty option argument.'
+        --program=)             # Handle the case of an empty
+            die 'ERROR: "--program" requires a non-empty option argument.'
+            ;;
+        -t|--type)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                type=$2
+                shift
+            else
+                die 'ERROR: "--type" requires a non-empty option argument.'
+            fi
+            ;;
+        --type=?*)
+            type=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            ;;
+        --type=)             # Handle the case of an empty
+            die 'ERROR: "--type" requires a non-empty option argument.'
             ;;
         --)                 # End of all options.
             shift
@@ -110,11 +124,11 @@ if [ ! -d $jamfolder ]; then
     die "ERROR! No running instance found. "
 fi
 
-if [ -z $target ]; then
+if [ -z $program ]; then
     die "Target not specified.. cannot locate the running application."
 fi
 
-tname="${target%.*}"
+tname="${program%.*}"
 tname=$tname"_"$app
 fext="${file##*.}"
 
@@ -128,32 +142,35 @@ if [ "$(ls -A $jamfolder)" ]; then
         if [ -d $dir ]; then
             checkdocker $dir
             if [ $running == "docker" ]; then
-                type=`cat $dir/machType`
-                data=`cat $dir/dataStore`
-                runon=`cat $dir/dockerId`
-                case $type in
-                    cloud)
-                        if [ $fext == "jxe" ]; then
-                            djamrun $file --app=$app --cloud --data=$data --runon=$runon
-                        else
-                            docker exec -it $runon $file $rest
-                        fi
-                    ;;
-                    fog)
-                        if [ $fext == "jxe" ]; then
-                            djamrun $file --app=$app --fog --data=$data --runon=$runon
-                        else
-                            docker exec -it $runon $file $rest
-                        fi
-                    ;;
-                    device)
-                        if [ $fext == "jxe" ]; then
-                            djamrun $file --app=$app  --data=$data --runon=$runon --num=`cat $dir/cdevs`
-                        else
-                            docker exec -it $runon $file $rest
-                        fi
-                    ;;
-                esac
+                mtype=`cat $dir/machType`
+                if [ -z $type ] || [ $type == $mtype ]; then
+                    data=`cat $dir/dataStore`
+                    runon=`cat $dir/dockerId`
+                    case $mtype in
+                        cloud)
+                            echo "Runon $runon, jrun $jruns"
+                            if [ $fext == "jxe" ]; then
+                                djamrun $file --app=$app --cloud --data=$data --runon=$runon
+                            else
+                                docker exec -it $runon $file $rest
+                            fi
+                        ;;
+                        fog)
+                            if [ $fext == "jxe" ]; then
+                                djamrun $file --app=$app --fog --data=$data --runon=$runon
+                            else
+                                docker exec -it $runon $file $rest
+                            fi
+                        ;;
+                        device)
+                            if [ $fext == "jxe" ]; then
+                                djamrun $file --app=$app  --data=$data --runon=$runon --num=`cat $dir/cdevs`
+                            else
+                                docker exec -it $runon $file $rest
+                            fi
+                        ;;
+                    esac
+                fi
             fi
         fi
     done

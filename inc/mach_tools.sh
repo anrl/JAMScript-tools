@@ -26,6 +26,7 @@ startzonerouter() {
     local subnet=$4
 
     local present=`docker ps -a --filter name=$machname | grep $machname | wc -l`
+    echo "$machname Present " $present
 
     if [ $present == "0" ]; then
         # Create the machine
@@ -98,13 +99,15 @@ startglobalmach() {
         fi
 
         # Create the machine
-        docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage
+        dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage`
         if [ $? != 0 ]; then
             present=0
             docker rm $machname
         else
             present=1
         fi
+        dockerSer=${dockerSer:0:12}
+        result=$dockerSer
         if [ $present == 1 ]; then break; fi
     done
 }
