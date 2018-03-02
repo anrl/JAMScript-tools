@@ -221,7 +221,7 @@ make_container() {
         if [ -z $zcount ]; then
             die "Zone count is undefined.. run djaminit again."
         fi
-        local zone=$(( $RANDOM % $zcount ))
+        local zone=$(( 1 + $RANDOM % $zcount ))
 
         startzonemach $zone $contname jamnet 10
         if [ $type == "fog" ]; then
