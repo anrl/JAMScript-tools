@@ -213,7 +213,7 @@ make_container() {
     create_missingdir $jamfolder/$type/$contname
 
     if [ $type == "cloud" ]; then
-        startglobalmach $contname jamnet 10
+        startglobalmach $contname jamnet `cat $jamfolder/network`
         restartcloudpumba $contname
     else
         exit_missingfile $jamfolder/zones/count
@@ -223,7 +223,7 @@ make_container() {
         fi
         local zone=$(( 1 + $RANDOM % $zcount ))
 
-        startzonemach $zone $contname jamnet 10
+        startzonemach $zone $contname jamnet `cat $jamfolder/network`
         if [ $type == "fog" ]; then
             restartfogpumba $contname
         fi
@@ -247,7 +247,7 @@ createzonerouters() {
 
     for i in `seq 1 $zcount`; do
         echo "I= "$i
-        startzonerouter $i "u-$UID-router-$i" jamnet 10
+        startzonerouter $i "u-$UID-router-$i" jamnet `cat $jamfolder/network`
         restartrouterpumba "u-$UID-router-$i"
     done
 }
@@ -466,7 +466,7 @@ if [ -e "$file" ]; then
 
     dockerImage=`cat $jamfolder/dockerImage`
     createzonerouters
-    createnetwork jamnet 10
+    createnetwork jamnet 10 $jamfolder
     # cd into the $appfolder
     cd $appfolder
 
