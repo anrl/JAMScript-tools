@@ -5,11 +5,26 @@
 createnetwork() {
     local netname=$1
     local subnet=$2
+    local folder=$3
 
-    local present=`docker network ls | grep $netname | wc -l`
-    if [ $present == "0" ]; then
-        docker network create --driver=bridge --subnet=10.$subnet.0.0/16 --ip-range=10.$subnet.0.0/16 $netname
-    fi
+    while : ; do
+        local present=`docker network ls | grep $netname | wc -l`
+        if [ $present == "0" ]; then
+            docker network create --driver=bridge --subnet=10.$subnet.0.0/16 --ip-range=10.$subnet.0.0/16 $netname
+
+            if [ $? != 0 ]; then
+                # Could not create the network.. check with another subnet
+                subnet=(( $subnet + 1 ))
+            else
+                present=1
+                if [ ! -z $folder ]; then
+                    echo $subnet > $folder/network
+                fi
+            fi
+        fi
+
+        if [ $present == 1 ]; then break; fi
+    done
 }
 
 
