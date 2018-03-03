@@ -13,12 +13,16 @@ die() {
 }
 
 
-#check_set_check_prog MOSQUITTO "mosquitto broker missing." /usr/local/sbin/mosquitto
-#check_set_check_prog MOSQUITTO_PUB "mosquitto Pub tool missing." /usr/local/sbin/mosquitto_pub
-MOSQUITTO=/usr/local/sbin/mosquitto
-MOSQUITTO_PUB=/usr/local/sbin/mosquitto_pub
+MOSQUITTO=`which mosquitto`
+MOSQUITTO_PUB=`which mosquitto_pub`
 TMUX=`which tmux`
 
+if [ -z $MOSQUITTO ]; then
+    die "mosquitto (MQTT broker) not installed. Quitting."
+fi
+if [ -z $MOSQUITTO_PUB ]; then
+    die "mosquitto_pub (MQTT tools) not installed. Quitting."
+fi
 if [ -z $TMUX ]; then
     die "tmux not installed. Quitting."
 fi
