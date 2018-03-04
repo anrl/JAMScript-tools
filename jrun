@@ -127,7 +127,8 @@ resolvedocker() {
 
         configureredis $port
     fi
-    data=$name
+    # trim space left behind by hostname -I
+    data=$(echo $name | tr -d [:space:])
 }
 
 

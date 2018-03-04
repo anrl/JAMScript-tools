@@ -126,7 +126,7 @@ runatdevice() {
         tmux new-session -s $dockid"-dev" -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jrun $file --app=$appid  --data=$data --group=$dockid
 
         for i in `seq 1 $num`; do
-            tmux new-session -s $dockid"-dev-"$i -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid crun $file --app=$appid  --data=$data --group=$dockid
+            tmux new-session -s $dockid"-dev-"$i -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid crun $file --app=$appid --num=$i --group=$dockid
         done
 
         if [ -z $bg ]; then
@@ -138,7 +138,7 @@ runatdevice() {
         tmux new-session -s $dockid"-dev" -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jrun $file --app=$appid  --data=$data --group=$dockid
 
         for i in `seq 1 $num`; do
-            tmux new-session -s $dockid"-dev-"$i -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid crun $file --app=$appid  --data=$data --group=$dockid
+            tmux new-session -s $dockid"-dev-"$i -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid crun $file --app=$appid  --num=$i --group=$dockid
         done
 
         if [ -z $bg ]; then
