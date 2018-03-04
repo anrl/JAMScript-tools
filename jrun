@@ -1,5 +1,9 @@
 #!/bin/bash
 
+IDIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$IDIR" ]]; then IDIR="$PWD"; fi
+source "$IDIR/inc/misc_tools.sh"
+
 # Edit the following locations to provide the
 MOSQUITTO=`which mosquitto`
 if [ -z $MOSQUITTO ]; then
@@ -127,32 +131,78 @@ resolvedocker() {
 }
 
 
+getappid() {
+    local mainf=$1
+    local localf=$2
+    local appid=$3
+
+    if [ -e $mainf/counter ]; then
+        local count=`cat $mainf/counter`
+        ((count++))
+        echo $count > $mainf/counter
+    else
+        local count=1
+        echo $count > $mainf/counter
+    fi
+
+    if [[ $appid == app-* ]]; then
+        if [ ! -e $localf/appid ]; then
+            echo "app-"$count > $localf/appid
+        fi
+    else
+        echo $appid > $localf/appid
+    fi
+
+    jappid=`cat $localf/appid`
+}
+
+
+
 dojamout() {
+    dojamout_p1 $1 $2 $3
+    dojamout_p2 $1 $2 $3
+}
+
+
+dojamout_p1() {
     local type=$1
     local pnum=$2
+    local floc=$3
 
     startmqtt $pnum
+    echo $data > $floc/$pnum/dataStore
+    echo "process" > $floc/$pnum/class
+    echo $SHELLPID > $floc/$pnum/shellpid
+    echo "new" > $floc/$pnum/processId
+}
+
+
+
+dojamout_p2() {
+    local type=$1
+    local pnum=$2
+    local floc=$3
 
     case $type in
         cloud)
             if [ -z "$tags" ]; then
-                node jamout.js --app=$app --cloud --port=$pnum --data=$data
+                node jamout.js --app=$jappid --cloud --port=$pnum --data=$data
             else
-                node jamout.js --app=$app --cloud --port=$pnum --data=$data --tags=$tags
+                node jamout.js --app=$jappid --cloud --port=$pnum --data=$data --tags=$tags
             fi
             ;;
         fog)
             if [ -z "$tags" ]; then
-                node jamout.js --app=$app --fog --port=$pnum --data=$data
+                node jamout.js --app=$jappid --fog --port=$pnum --data=$data
             else
-                node jamout.js --app=$app --fog --port=$pnum --data=$data --tags=$tags
+                node jamout.js --app=$jappid --fog --port=$pnum --data=$data --tags=$tags
             fi
             ;;
         device)
             if [ -z "$tags" ]; then
-                node jamout.js --app=$app --port=$pnum --data=$data
+                node jamout.js --app=$jappid --port=$pnum --data=$data
             else
-                node jamout.js --app=$app --port=$pnum --data=$data --tags=$tags
+                node jamout.js --app=$jappid --port=$pnum --data=$data --tags=$tags
             fi
             ;;
     esac
@@ -183,7 +233,7 @@ portavailable() {
 # Initialize all the option variables.
 app=testapp
 type=device
-data=127.0.0.1
+data=127.0.0.1:6379
 tags=
 group="default"
 
@@ -306,15 +356,15 @@ if [ -e "$file" ]; then
 
     # Check whether the global __jamruns folder is there
     jamfolder=$HOME"/__jamruns"
-    if [ ! -d $jamfolder ]; then
-        mkdir $jamfolder
-    fi
+    create_missingdir $jamfolder
+
+    appfolder=$jamfolder/apps
+    create_missingdir $appfolder
+
     # Get the folder
     filenoext="${file%.*}"
-    folder=$HOME/__jamruns/$filenoext"_"$app
-    if [ ! -d "$folder" ]; then
-        mkdir $folder
-    fi
+    folder=$appfolder/$filenoext"_"$app
+    create_missingdir $folder
 
     # unzip the executable in the folder and run it..
     # We are unzipping the copying the files no matter what!
@@ -335,7 +385,9 @@ if [ -e "$file" ]; then
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
-                dojamout $type $iport
+                getappid $jamfolder $folder $app
+                create_missingdir $folder/$iport
+                dojamout $type $iport $folder
                 ;;
             fog)
                 iport=5883
@@ -344,7 +396,9 @@ if [ -e "$file" ]; then
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
-                dojamout $type $iport
+                getappid $jamfolder $folder $app
+                create_missingdir $folder/$iport
+                dojamout $type $iport $folder
                 ;;
             device)
                 iport=1883
@@ -353,8 +407,10 @@ if [ -e "$file" ]; then
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
+                getappid $jamfolder $folder $app
+                create_missingdir $folder/$iport
                 writegroup $iport $group
-                dojamout $type $iport
+                dojamout $type $iport $folder
                 ;;
         esac
     else

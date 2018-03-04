@@ -543,9 +543,7 @@ if [ -e "$file" ]; then
                 iport=1883
                 while [ : ]; do
                     portavailable $folder $iport
-                    if [ $porttaken == 0 ]; then
-                        break
-                    fi
+                    [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
                 getappid $jamfolder $folder $app

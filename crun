@@ -119,14 +119,14 @@ done
 if [ -e "$file" ]; then
 
     # Check whether the global __jamruns folder is there
-    jamfolder=$HOME"/__jamruns"
+    jamfolder=$HOME"/__jamruns/apps"
     if [ ! -d $jamfolder ]; then
         die "$jamfolder not found"
     fi
 
     # Get the folder
     filenoext="${file%.*}"
-    folder=$HOME"/__jamruns/"$filenoext"_"$app
+    folder=$HOME"/__jamruns/apps/"$filenoext"_"$app
     if [ ! -d "$folder" ]; then
         die "Folder: $folder not found to start the program"
     fi
@@ -134,7 +134,13 @@ if [ -e "$file" ]; then
     cd $folder
     getgroupport $group
 
+    # Note: you need to use --num=value to point to the correct
+    # device sequence number.
+    # with two devices; 1, 2 are the numbers
+    #
+
     if [ -e a.out ]; then
+
         # execute the program.. we are in the folder..
         chmod +x a.out
 

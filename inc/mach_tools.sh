@@ -16,13 +16,15 @@ createnetwork() {
                 subnet=$(( $subnet + 1 ))
             else
                 present=1
-                if [ ! -z $folder ]; then
-                    echo $subnet > $folder/network
-                fi
             fi
         fi
 
-        if [ $present == 1 ]; then break; fi
+        if [ $present == 1 ]; then
+            if [ ! -z $folder ]; then
+                echo $subnet > $folder/network
+            fi
+            break
+        fi
     done
 }
 
