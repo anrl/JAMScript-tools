@@ -473,8 +473,10 @@ if [ -e "$file" ]; then
     getappid $app
     getdockerid $runon
     if [ $result == "new" ]; then
-        make_container $type $dockerid
+        # We are also putting resources such as redis on the container
+        make_container $type $dockerid 
     else
+        # Automatically inherit the redis.. no checking??
         reuse_container $type $dockerid
     fi
 

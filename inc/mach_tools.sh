@@ -126,4 +126,5 @@ startglobalmach() {
         result=$dockerSer
         if [ $present == 1 ]; then break; fi
     done
+
 }

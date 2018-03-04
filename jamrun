@@ -312,9 +312,9 @@ cleanuptmux() {
 
 
 startredis() {
-    local port=$1
 
-    redis-server --port $port &
+    # Start redis with no protected-mode and at the port
+    echo -e "port $1\nprotected-mode no" | redis-server - &
 }
 
 waitforredis() {
@@ -323,7 +323,6 @@ waitforredis() {
     while : ; do
         local present=`ps ax | grep redis-server | grep $port | wc -l`
         if [ $present == "1" ]; then
-            redis-cli -p $port CONFIG SET protected-mode no
             break
         fi
         sleep 1
