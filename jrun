@@ -99,16 +99,11 @@ waitforredis() {
     while : ; do
         local present=`ps ax | grep redis-server | grep $port | wc -l`
         if [ $present == "1" ]; then
+            redis-cli -p $port CONFIG SET protected-mode no
             break
         fi
         sleep 1
     done
-}
-
-configureredis() {
-    local port=$1
-
-    redis-cli -p $port CONFIG SET protected-mode no
 }
 
 
@@ -124,8 +119,6 @@ resolvedocker() {
     if [ $host == "docker" ]; then
         local ipaddr=`hostname -I`
         name=$ipaddr:$port
-
-        configureredis $port
     fi
     # trim space left behind by hostname -I
     data=$(echo $name | tr -d [:space:])
