@@ -21,6 +21,7 @@ app=testapp
 num=1
 group="default"
 port=
+tags=
 
 file=$1
 shift
@@ -102,6 +103,20 @@ while :; do
         --group=)            # Handle the case of an empty
             die 'ERROR: "--group" requires a non-empty option argument.'
             ;;
+        -t|--tags)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                tags=$2
+                shift
+            else
+                die 'ERROR: "--tags" requires a non-empty option argument.'
+            fi
+            ;;
+        --tags=?*)
+            tags=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            ;;
+        --tags=)            # Handle the case of an empty
+            die 'ERROR: "--tags" requires a non-empty option argument.'
+            ;;
         --)              # End of all options.
             shift
             break
@@ -143,8 +158,11 @@ if [ -e "$file" ]; then
 
         # execute the program.. we are in the folder..
         chmod +x a.out
-
-        ./a.out -a $app -n $num -p $port
+        if [ -z $tags ]; then
+            ./a.out -a $app -n $num -p $port
+        else
+            ./a.out -a $app -n $num -t $tags -p $port
+        fi
     else
         die "$file is not a valid JAMScript executable"
     fi

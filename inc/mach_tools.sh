@@ -20,6 +20,9 @@ createnetwork() {
                     echo $subnet > $folder/network
                 fi
             fi
+        elif
+            subnet=`docker network inspect jamnet | grep IPv4 | awk '{split($0,a, "\""); print a[4]}' | awk '{split($0,a, "."); print a[2]}'`
+            echo $subnet > $folder/network
         fi
 
         if [ $present == 1 ]; then
@@ -42,7 +45,6 @@ startzonerouter() {
     local subnet=$4
 
     local present=`docker ps -a --filter name=$machname | grep $machname | wc -l`
-    echo "$machname Present " $present
 
     if [ $present == "0" ]; then
         # Create the machine

@@ -227,7 +227,11 @@ doaout() {
     while [ $counter -le $num ]; do
         if [ -e a.out ]; then
             # execute the program.. we are in the folder..
-            $TMUX send-keys -t $tmuxapp:0.$indx "./a.out -a $jappid -p $port -n $counter" C-m
+            if [ -z "$tags" ]; then
+                $TMUX send-keys -t $tmuxapp:0.$indx "./a.out -a $jappid -p $port -n $counter" C-m
+            else
+                $TMUX send-keys -t $tmuxapp:0.$indx "./a.out -a $jappid -p $port -t $tags -n $counter" C-m
+            fi
         fi
         ((counter++))
         ((indx++))
@@ -394,7 +398,7 @@ while :; do
         --app=)            # Handle the case of an empty
             die 'ERROR: "--args" requires a non-empty option argument.'
             ;;
-        -s|--tags)           # Takes an option argument; ensure it has been specified.
+        -t|--tags)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 tags=$2
                 shift

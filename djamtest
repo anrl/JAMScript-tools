@@ -75,6 +75,7 @@ if [ -z $1 ]; then
     startzonemach 1 "u-$UID-fog-test-1" jamtest 54
     startzonemach 1 "u-$UID-dev-test-1" jamtest 54
 
+
     startzonemach 2 "u-$UID-fog-test-2" jamtest 54
     startzonemach 2 "u-$UID-dev-test-2" jamtest 54
 

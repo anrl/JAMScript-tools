@@ -267,7 +267,7 @@ while :; do
         --app=)            # Handle the case of an empty
             die 'ERROR: "--app" requires a non-empty option argument.'
             ;;
-        -s|--tags)           # Takes an option argument; ensure it has been specified.
+        -t|--tags)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 tags=$2
                 shift

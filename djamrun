@@ -69,7 +69,7 @@ runatcloud() {
         else
 
             echo $dockid"-cloud" > $appfolder/$dockid/tmuxid
-            tmux new-session -s $dockid"-cloud" docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data
+            tmux new-session -s $dockid"-cloud" -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data
         fi
     else
         if [ -z $bg ]; then
@@ -193,7 +193,9 @@ getappid() {
 
 getdockerid() {
     local rundock=$1
+
     if [ -z $rundock ] || [ `docker ps --filter name=$rundock | grep $rundock | wc -l` == "0" ]; then
+
         inc_counter $jamfolder/counter
         local count=$result
         dockerid="u-"$UID"-$type-"$count
@@ -202,6 +204,7 @@ getdockerid() {
         dockerid=$rundock
         result="old"
     fi
+
 }
 
 
@@ -355,7 +358,7 @@ while :; do
         --runon=)            # Handle the case of an empty
             die 'ERROR: "--runon" requires a non-empty option argument.'
             ;;
-        -s|--tags)           # Takes an option argument; ensure it has been specified.
+        -t|--tags)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 tags=$2
                 shift
@@ -449,7 +452,6 @@ exit_missingfile $jamfolder/dockerImage "DockerImage not setup. Run djam pull fi
 
 create_missingdir $jamfolder/apps
 
-
 if [ -e "$file" ]; then
 
     # Get the folder
@@ -472,9 +474,10 @@ if [ -e "$file" ]; then
 
     getappid $app
     getdockerid $runon
+
     if [ $result == "new" ]; then
         # We are also putting resources such as redis on the container
-        make_container $type $dockerid 
+        make_container $type $dockerid
     else
         # Automatically inherit the redis.. no checking??
         reuse_container $type $dockerid
