@@ -20,8 +20,8 @@ createnetwork() {
                     echo $subnet > $folder/network
                 fi
             fi
-        elif
-            subnet=`docker network inspect jamnet | grep IPv4 | awk '{split($0,a, "\""); print a[4]}' | awk '{split($0,a, "."); print a[2]}'`
+        else
+            subnet=`docker network inspect $netname | grep IPv4 | awk '{split($0,a, "\""); print a[4]}' | awk '{split($0,a, "."); print a[2]}'`
             echo $subnet > $folder/network
         fi
 
