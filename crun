@@ -168,13 +168,13 @@ if [ -e "$file" ]; then
     jamfolder="$HOME/__jamruns"
     while :; do
         inotifywait -e create $HOME
-        if [ -d $jamfolder ]; break; fi
+        if [ -d $jamfolder ]; then break; fi
     done
 
     appfolder=$jamfolder/apps
     while :; do
         inotifywait -e create $jamfolder
-        if [ -d $appfolder ]; break; fi
+        if [ -d $appfolder ]; then break; fi
     done
 
     # Get the folder
@@ -182,13 +182,13 @@ if [ -e "$file" ]; then
     folder=$HOME"/__jamruns/apps/"$filenoext"_"$app
     while :; do
         inotifywait -e create $appfolder
-        if [ -d $folder ]; break; fi
+        if [ -d $folder ]; then break; fi
     done
 
     cd $folder
     while :; do
         getgroupport $group
-        if [ -n $port ]; break; fi
+        if [ -n $port ]; then break; fi
         inotifywait -r -e create $folder
     done
 
