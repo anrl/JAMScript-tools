@@ -125,13 +125,20 @@ runatdevice() {
         echo $dockid"-dev" > $appfolder/$dockid/tmuxid
         tmux new-session -s $dockid"-dev" -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jrun $file --app=$appid  --data=$data --group=$dockid
 
-        for i in `seq 1 $num`; do
-            tmux new-session -s $dockid"-dev-"$i -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid crun $file --app=$appid --num=$i --group=$dockid
-        done
+#        for i in `seq 1 $num`; do
+#            tmux new-session -s $dockid"-dev-"$i -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid crun $file --app=$appid --num=$i --group=$dockid
+#        done
 
-        if [ -z $bg ]; then
-            tmux attach-session -t $dockid"-dev"
-        fi
+        echo "Num $num"
+
+#        for i in `seq 1 $num`; do
+            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid crun $file --app=$appid --group=$dockid
+#        done
+
+
+#        if [ -z $bg ]; then
+#            tmux attach-session -t $dockid"-dev"
+#        fi
 
     else
         echo $dockid"-dev" > $appfolder/$dockid/tmuxid

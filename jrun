@@ -124,33 +124,6 @@ resolvedocker() {
 }
 
 
-getappid() {
-    local mainf=$1
-    local localf=$2
-    local appid=$3
-
-    if [ -e $mainf/counter ]; then
-        local count=`cat $mainf/counter`
-        ((count++))
-        echo $count > $mainf/counter
-    else
-        local count=1
-        echo $count > $mainf/counter
-    fi
-
-    if [[ $appid == app-* ]]; then
-        if [ ! -e $localf/appid ]; then
-            echo "app-"$count > $localf/appid
-        fi
-    else
-        echo $appid > $localf/appid
-    fi
-
-    jappid=`cat $localf/appid`
-}
-
-
-
 dojamout() {
     dojamout_p1 $1 $2 $3
     dojamout_p2 $1 $2 $3
@@ -179,23 +152,23 @@ dojamout_p2() {
     case $type in
         cloud)
             if [ -z "$tags" ]; then
-                node jamout.js --app=$jappid --cloud --port=$pnum --data=$data
+                node jamout.js --app=$app --cloud --port=$pnum --data=$data
             else
-                node jamout.js --app=$jappid --cloud --port=$pnum --data=$data --tags=$tags
+                node jamout.js --app=$app --cloud --port=$pnum --data=$data --tags=$tags
             fi
             ;;
         fog)
             if [ -z "$tags" ]; then
-                node jamout.js --app=$jappid --fog --port=$pnum --data=$data
+                node jamout.js --app=$app --fog --port=$pnum --data=$data
             else
-                node jamout.js --app=$jappid --fog --port=$pnum --data=$data --tags=$tags
+                node jamout.js --app=$app --fog --port=$pnum --data=$data --tags=$tags
             fi
             ;;
         device)
             if [ -z "$tags" ]; then
-                node jamout.js --app=$jappid --port=$pnum --data=$data
+                node jamout.js --app=$app --port=$pnum --data=$data
             else
-                node jamout.js --app=$jappid --port=$pnum --data=$data --tags=$tags
+                node jamout.js --app=$app --port=$pnum --data=$data --tags=$tags
             fi
             ;;
     esac
@@ -378,7 +351,6 @@ if [ -e "$file" ]; then
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
-                getappid $jamfolder $folder $app
                 create_missingdir $folder/$iport
                 dojamout $type $iport $folder
                 ;;
@@ -389,7 +361,6 @@ if [ -e "$file" ]; then
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
-                getappid $jamfolder $folder $app
                 create_missingdir $folder/$iport
                 dojamout $type $iport $folder
                 ;;
@@ -400,7 +371,6 @@ if [ -e "$file" ]; then
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
-                getappid $jamfolder $folder $app
                 create_missingdir $folder/$iport
                 writegroup $iport $group
                 dojamout $type $iport $folder

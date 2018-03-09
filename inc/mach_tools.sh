@@ -21,7 +21,7 @@ createnetwork() {
                 fi
             fi
         else
-            subnet=`docker network inspect $netname | grep IPv4 | awk '{split($0,a, "\""); print a[4]}' | awk '{split($0,a, "."); print a[2]}'`
+            subnet=`docker network inspect $netname | grep IPRange | awk '{split($0,a, "\""); print a[4]}' | awk '{split($0,a, "."); print a[2]}'`
             echo $subnet > $folder/network
         fi
 
