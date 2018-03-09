@@ -16,6 +16,33 @@ group.
 EOF
 }
 
+
+getappid() {
+    local mainf=$1
+    local localf=$2
+    local appid=$3
+
+    if [ -e $mainf/counter ]; then
+        local count=`cat $mainf/counter`
+        ((count++))
+        echo $count > $mainf/counter
+    else
+        local count=1
+        echo $count > $mainf/counter
+    fi
+
+    if [[ $appid == app-* ]]; then
+        if [ ! -e $localf/appid ]; then
+            echo "app-"$count > $localf/appid
+        fi
+    else
+        echo $appid > $localf/appid
+    fi
+
+    jappid=`cat $localf/appid`
+}
+
+
 # Initialize all the option variables.
 app=testapp
 num=1
@@ -148,6 +175,7 @@ if [ -e "$file" ]; then
 
     cd $folder
     getgroupport $group
+    getappid $jamfolder $folder $app
 
     # Note: you need to use --num=value to point to the correct
     # device sequence number.
@@ -159,9 +187,9 @@ if [ -e "$file" ]; then
         # execute the program.. we are in the folder..
         chmod +x a.out
         if [ -z $tags ]; then
-            ./a.out -a $app -n $num -p $port
+            ./a.out -a $jappid -n $num -p $port
         else
-            ./a.out -a $app -n $num -t $tags -p $port
+            ./a.out -a $jappid -n $num -t $tags -p $port
         fi
     else
         die "$file is not a valid JAMScript executable"
