@@ -166,24 +166,15 @@ if [ -e "$file" ]; then
 
     # Check whether the global __jamruns folder is there
     jamfolder="$HOME/__jamruns"
-    while :; do
-        inotifywait -e create $HOME
-        if [ -d $jamfolder ]; then break; fi
-    done
+    wait_missingdir $HOME $jamfolder
 
     appfolder=$jamfolder/apps
-    while :; do
-        inotifywait -e create $jamfolder
-        if [ -d $appfolder ]; then break; fi
-    done
+    wait_missingdir $jamfolder $appfolder
 
     # Get the folder
     filenoext="${file%.*}"
     folder=$HOME"/__jamruns/apps/"$filenoext"_"$app
-    while :; do
-        inotifywait -e create $appfolder
-        if [ -d $folder ]; then break; fi
-    done
+    wait_missingdir $appfolder $folder
 
     cd $folder
     while :; do

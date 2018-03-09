@@ -108,6 +108,19 @@ exit_missingdir() {
     fi
 }
 
+wait_missingdir() {
+    local rootdir=$1
+    local watchdir=$2
+
+    if [ ! -d $watchdir ]; then
+        while :; do
+            inotifywait -e create $rootdir
+            if [ -d $watchdir ]; then break; fi
+        done
+    fi
+}
+
+
 exit_missingfile() {
     local file=$1
     local emsg=$2
@@ -117,6 +130,8 @@ exit_missingfile() {
         exit 0
     fi
 }
+
+
 
 
 check_prog() {
