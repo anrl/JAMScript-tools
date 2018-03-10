@@ -114,7 +114,7 @@ wait_missingdir() {
 
     if [ ! -d $watchdir ]; then
         while :; do
-            inotifywait -e create $rootdir
+            inotifywait -e create -t 1 $rootdir
             if [ -d $watchdir ]; then break; fi
         done
     fi
