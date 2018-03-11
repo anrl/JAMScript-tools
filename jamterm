@@ -20,52 +20,28 @@ die() {
 show_usage() {
     cat << EOF
 
-jamterm tmux-id
-Shows the background terminals of with the given tmux-id.
+jamterm tmux-id [terminal-num]
+Shows the background terminals of with the given tmux-id and terminal-num.
+
+For example, to see the second terminal of a program running with u-600-dev-2331
+type jamterm u-600-dev-2331-2. Note that terminal-num is optional.
 
 EOF
 }
 
 localtmux() {
     local tmuxapp=$1
+    local termno=$2
 
     $TMUX has-session -t $tmuxapp 2>/dev/null
     res=$?
     if [ $res == "0" ]; then
-        # This is overkill.. we would kill instances belonging to other applications
-        $TMUX attach -t $tmuxapp
-    fi
-}
-
-
-
-dockertmux() {
-    local tmuxapp=$1
-
-    appsfolder=$HOME"/__jamruns/apps"
-    cd $appsfolder
-
-    for jruns in */; do
-        if [ $jruns != "*/" ]; then
-            for jexs in `ls $appsfolder/$jruns`; do
-                dir=$appsfolder/$jruns$jexs
-                if [ -d $dir ]; then
-                    local dcl=`cat $dir/class | tr -d [:space:]`
-
-                    if [ $dcl == "docker" ]; then
-                        if [ -e $dir/tmuxid_c ]; then
-                            local dtm=`cat $dir/tmuxid_c | tr -d [:space:]`
-                            if [ $dtm == $tmuxapp ]; then
-                                echo "Calling docker .. on " `cat $dir/dockerId`
-                                docker exec -it `cat $dir/dockerId` jam term dtm
-                                break
-                            fi
-                        fi
-                    fi
-                fi
-            done
+        if [ -z $termno ]; then
+            $TMUX attach -t $tmuxapp
+        else
+            $TMUX attach -t $tmuxapp-$termno
         fi
-    done
+    fi
 }
 
 
@@ -78,11 +54,5 @@ if [ -z $1 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
     exit
 fi
 
-tmuxid=$1
 
-if [ ${tmuxid: -1} == "c" ]; then
-    # Connect to the docker to display the C panes
-    dockertmux $tmuxid
-else
-    localtmux $tmuxid
-fi
+localtmux $1 $2

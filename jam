@@ -10,13 +10,14 @@ show_usage() {
 
 Runs a collection of jam machine commands.
 
-jam help  - prints this help
-jam clean - clean the setup left behind by old runs
-jam close - close all terminaled opened by the 'term' command
-jam kill  - kill a node
-jam list  - lists all the JAMScript programs running in the system
-jam run   - start a device, fog, or cloud
-jam term  - show the tmux terminals of the running nodes
+jam help    - prints this help
+jam clean   - clean the setup left behind by old runs
+jam close   - close all terminaled opened by the 'term' command
+jam install - install the JAMScript from source.
+jam kill    - kill a node
+jam list    - lists all the JAMScript programs running in the system
+jam run     - start a device, fog, or cloud
+jam term    - show the tmux terminals of the running nodes
 
 
 Type 'jam cmd --help' for more help on the specific command.
@@ -49,5 +50,8 @@ case $jcmd in
         ;;
     run)
         jamrun $params
+        ;;
+    install)
+        jaminstall $params
         ;;
 esac

@@ -1,0 +1,99 @@
+#!/bin/bash
+
+IDIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$IDIR" ]]; then IDIR="$PWD"; fi
+source "$IDIR/inc/misc_tools.sh"
+
+# Edit the following locations to provide the
+TMUX=`which tmux`
+if [ -z $TMUX ]; then
+    TMUX=/usr/local/bin/tmux
+fi
+
+# No need to edit below this line unless you find a bug!
+
+die() {
+    printf '%s\n' "$1" >&2
+    exit 1
+}
+
+show_usage() {
+    cat << EOF
+
+djamterm tmux-id [terminal-num]
+Shows the background terminals of with the given tmux-id and terminal-num.
+
+This is the docker version of the jamterm command.
+
+For example, to see the second terminal of a program running with u-600-dev-2331
+type jamterm u-600-dev-2331-2. Note that terminal-num is optional.
+
+EOF
+}
+
+
+localtmux() {
+    local tmuxapp=$1
+    local termno=$2
+
+    $TMUX has-session -t $tmuxapp 2>/dev/null
+    res=$?
+    if [ $res == "0" ]; then
+        if [ -z $termno ]; then
+            $TMUX attach -t $tmuxapp
+        else
+            $TMUX attach -t $tmuxapp-$termno
+        fi
+    fi
+}
+
+
+dockertmux() {
+    local tmuxapp=$1
+    local termno=$2
+
+    appsfolder=$HOME"/__jamruns/apps"
+    cd $appsfolder
+
+    for jruns in */; do
+        if [ $jruns != "*/" ]; then
+            for jexs in `ls $appsfolder/$jruns`; do
+                dir=$appsfolder/$jruns$jexs
+                if [ -d $dir ]; then
+                    local dcl=`cat $dir/class | tr -d [:space:]`
+
+                    if [ $dcl == "docker" ]; then
+                        if [ -e $dir/tmuxid_c ]; then
+                            local dtm=`cat $dir/tmuxid_c | tr -d [:space:]`
+                            if [ $dtm == $tmuxapp ]; then
+                                echo "Calling docker .. on " `cat $dir/dockerId`
+                                docker exec -it `cat $dir/dockerId` jam term $tmuxapp $termno
+                                break
+                            fi
+                        fi
+                    fi
+                fi
+            done
+        fi
+    done
+}
+
+
+###
+# Main script execution begins here...
+#
+
+if [ -z $1 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
+    show_usage
+    exit
+fi
+
+txid=$1
+termi=$2
+
+if [ ${txid: -1} == "c" ]; then
+    # Connect to the docker to display the C panes
+    dockertmux $1 $2
+else
+    localtmux $1 $2
+fi

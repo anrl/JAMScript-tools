@@ -214,7 +214,6 @@ dojamout_p2_bg() {
 }
 
 
-
 doaout() {
     local counter=1
     local indx=0
@@ -224,13 +223,14 @@ doaout() {
     if [ -e a.out ]; then
         chmod +x a.out
     fi
+
     while [ $counter -le $num ]; do
         if [ -e a.out ]; then
             # execute the program.. we are in the folder..
             if [ -z "$tags" ]; then
-                $TMUX send-keys -t $tmuxapp:0.$indx "./a.out -a $jappid -p $port -n $counter" C-m
+                $TMUX new-session -s $tmuxapp-$indx "./a.out -a $jappid -p $port -n $counter"
             else
-                $TMUX send-keys -t $tmuxapp:0.$indx "./a.out -a $jappid -p $port -t $tags -n $counter" C-m
+                $TMUX new-session -s $tmuxapp-$indx "./a.out -a $jappid -p $port -t $tags -n $counter"
             fi
         fi
         ((counter++))
@@ -271,17 +271,6 @@ setuptmux() {
         tmuxapp=$tmuxid
     fi
 
-    echo $tmuxapp > $1/tmuxid
-
-    if [ "$type" == "device" ]; then
-        $TMUX new -s $tmuxapp -d
-        counter=1
-        while [ $counter -le $num ]; do
-            $TMUX split-window -v -t $tmuxapp
-            $TMUX select-layout -t $tmuxapp tiled
-            ((counter++))
-        done
-    fi
     trap cleanuptmux SIGINT
 }
 

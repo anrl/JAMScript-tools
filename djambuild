@@ -24,7 +24,7 @@ if [ -z $JAMHOME ]; then
     die
 fi
 
-docker build --no-cache -t jamscript $JAMHOME/scripts/install/Dockerfile
+docker build --no-cache -t jamscript $JAMHOME/scripts/install
 if [ -z $1 ]; then
     docker tag jamscript mahes25/jamscript
     docker push mahes25/jamscript
