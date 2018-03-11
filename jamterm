@@ -1,5 +1,9 @@
 #!/bin/bash
 
+IDIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$IDIR" ]]; then IDIR="$PWD"; fi
+source "$IDIR/inc/misc_tools.sh"
+
 # Edit the following locations to provide the
 TMUX=`which tmux`
 if [ -z $TMUX ]; then
@@ -22,15 +26,63 @@ Shows the background terminals of with the given tmux-id.
 EOF
 }
 
+localtmux() {
+    local tmuxapp=$1
+
+    $TMUX has-session -t $tmuxapp 2>/dev/null
+    res=$?
+    if [ $res == "0" ]; then
+        # This is overkill.. we would kill instances belonging to other applications
+        $TMUX attach -t $tmuxapp
+    fi
+}
+
+
+
+dockertmux() {
+    local tmuxapp=$1
+
+    appsfolder=$HOME"/__jamruns/apps"
+    cd $appsfolder
+
+    for jruns in */; do
+        if [ $jruns != "*/" ]; then
+            for jexs in `ls $appsfolder/$jruns`; do
+                dir=$appsfolder/$jruns$jexs
+                if [ -d $dir ]; then
+                    local dcl=`cat $dir/class | tr -d [:space:]`
+
+                    if [ $dcl == "docker" ]; then
+                        if [ -e $dir/tmuxid_c ]; then
+                            local dtm=`cat $dir/tmuxid_c | tr -d [:space:]`
+                            if [ $dtm == $tmuxapp ]; then
+                                echo "Calling docker .. on " `cat $dir/dockerId`
+                                docker exec -it `cat $dir/dockerId` jam term dtm
+                                break
+                            fi
+                        fi
+                    fi
+                fi
+            done
+        fi
+    done
+}
+
+
+###
+# Main script execution begins here...
+#
+
 if [ -z $1 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
     show_usage
     exit
 fi
 
-tmuxapp=$1
-$TMUX has-session -t $tmuxapp 2>/dev/null
-res=$?
-if [ $res == "0" ]; then
-    # This is overkill.. we would kill instances belonging to other applications
-    $TMUX attach -t $tmuxapp
+tmuxid=$1
+
+if [ ${tmuxid: -1} == "c" ]; then
+    # Connect to the docker to display the C panes
+    dockertmux $tmuxid
+else
+    localtmux $tmuxid
 fi

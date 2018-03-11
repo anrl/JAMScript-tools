@@ -310,6 +310,9 @@ while :; do
     shift
 done
 
+echo "Don't use jrun and crun! Use jamrun instead of them."
+echo "Exiting."
+exit
 
 if [ "$type" != "device" ] && [ -n "$num" ]; then
     die "number of devices can't be speciied for fog/cloud"

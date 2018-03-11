@@ -63,7 +63,7 @@ saveapplinfo() {
 printnodeinfo() {
     local port=$1
     local mtype=`cat $2/machType`
-    local appid=`cat $3/appid`
+    local appid=`cat $2/appid`
     local dstore=`cat $2/dataStore`
     local tmuxid=`cat $2/tmuxid`
 
@@ -86,9 +86,14 @@ printnodeinfo() {
 printdockerinfo() {
     local port=$1
     local mtype=`cat $2/machType`
-    local appid=`cat $3/appid`
+    local appid=`cat $2/appid`
     local dstore=`cat $2/dataStore`
     local tmuxid=`cat $2/tmuxid`
+    if [ -e $2/tmuxid_c ]; then
+        local tmuxid_c=`cat $2/tmuxid_c`
+    else
+        local tmuxid_c="-"
+    fi 
     local dockerid=`cat $2/dockerId`
 
     tmux has-session -t $tmuxid 2>/dev/null
@@ -100,7 +105,7 @@ printdockerinfo() {
     if [ $mtype == "device" ]; then
 #        local cdevs=`docker exec $dockerid jamquery $appid cdevs`
         cdevs=`cat $2/cdevs`
-        printf "%8s %12s %12s %12s %15s %10s %7s %10s\n" "$appid" "$appl" "$prog" "$dockerid" "$dstore" "$mtype" "$cdevs" "$tmuxid"
+        printf "%8s %12s %12s %12s %15s %10s %7s %10s\n" "$appid" "$appl" "$prog" "$dockerid" "$dstore" "$mtype" "$cdevs" "$tmuxid,$tmuxid_c"
     else
         printf "%8s %12s %12s %12s %15s %10s %7s %10s\n" "$appid" "$appl" "$prog" "$dockerid" "$dstore" "$mtype" "--" "$tmuxid"
     fi
@@ -149,6 +154,7 @@ while :; do
     shift
 done
 
+
 appsfolder=$HOME"/__jamruns/apps"
 if [ ! -d $appsfolder ]; then
     echo "No running instances of JAMScript."
@@ -168,9 +174,9 @@ if [ "$(ls -A $appsfolder)" ]; then
                 if [ -d $dir ]; then
                     checkprocess $dir
                     if [ $running == "ps" ]; then
-                        printnodeinfo $jexs $dir $appsfolder/$jruns
+                        printnodeinfo $jexs $dir
                     elif [ $running == "docker" ]; then
-                        printdockerinfo $jexs $dir $appsfolder/$jruns
+                        printdockerinfo $jexs $dir
                     fi
                 fi
             done

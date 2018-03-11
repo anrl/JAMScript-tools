@@ -12,6 +12,7 @@ Runs JAMScript instances in docker containers.
 The docker version of the normal 'jam' commands
 
 djam help   - Prints this help.
+djam build  - Rebuilds another docker image.
 djam clean  - Cleans up the mess left behind by old runs.
               Use this command if errors occur due to incomplete runs.
 djam close  - Close all tmux terminals opened by the 'term' command.
@@ -49,6 +50,9 @@ params=$@
 case $jcmd in
     list)
         jamlist $params
+        ;;
+    build)
+        djambuild $params
         ;;
     init)
         djaminit $params

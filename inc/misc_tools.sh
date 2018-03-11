@@ -29,11 +29,37 @@ inc_counter() {
         result=1
     fi
     echo $value > $counter
+}
+
+inc_counter_sync() {
+    local counter=$1
+    local value
+
+    echo "Counter: " $counter
+    if [ -e $counter ]; then
+        value=`cat $counter`
+        ((value++))
+        result=$value
+    else
+        value=1
+        result=1
+    fi
+    echo $value > $counter
     sync
 }
 
+
 # set_counter 10 $jamfolder/global/count
 set_counter() {
+    local value=$1
+    local counter=$2
+
+    if [ ! -e $counter ]; then
+        echo $value > $counter
+    fi
+}
+
+set_counter_sync() {
     local value=$1
     local counter=$2
 
@@ -48,6 +74,21 @@ set_counter() {
 # dec_counter counter_name
 #
 dec_counter() {
+    local counter=$1
+
+    if [ ! -e $counter ]; then
+        die "Trying to decrement a non-existent counter $counter"
+    fi
+
+    local value=`cat $counter`
+    if [ ! -z $value ]; then
+        ((value--))
+        echo $value > $counter
+    fi
+    result=$value
+}
+
+dec_counter_sync() {
     local counter=$1
 
     if [ ! -e $counter ]; then
@@ -77,12 +118,36 @@ save_no_overwrite() {
             echo $value > $location
         fi
     fi
+}
+
+
+save_no_overwrite_sync() {
+    local value=$1
+    local location=$2
+
+    if [ ! -e $location ]; then
+        echo $value > $location
+    else
+        local x=`cat $location`
+        if [ -z $x ]; then
+            echo $value > $location
+        fi
+    fi
     sync
 }
+
 
 # save value location
 # with overwrite
 save() {
+    local value=$1
+    local location=$2
+
+    echo $value > $location
+}
+
+
+save_sync() {
     local value=$1
     local location=$2
 

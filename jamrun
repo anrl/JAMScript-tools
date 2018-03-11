@@ -249,7 +249,7 @@ portavailable() {
             if [ $pid == "new" ]; then
                 porttaken=1
             elif [ ! -z $pid ]; then
-                porttaken=`ps -p $pid | grep node | wc -l`
+                porttaken=`ps -p $pid | grep node | wc -l | tr -d [:space:]`
             else
                 porttaken=0
             fi
@@ -265,7 +265,12 @@ portavailable() {
 
 setuptmux() {
 
-    tmuxapp="tg-$RANDOM"
+    if [ -z $tmuxid ]; then
+        tmuxapp="tg-$RANDOM"
+    else
+        tmuxapp=$tmuxid
+    fi
+
     echo $tmuxapp > $1/tmuxid
 
     if [ "$type" == "device" ]; then
@@ -286,21 +291,11 @@ getappid() {
     local localf=$2
     local appid=$3
 
-    if [ -e $mainf/counter ]; then
-        local count=`cat $mainf/counter`
-        ((count++))
-        echo $count > $mainf/counter
+    if [ $appid == "app-n" ]; then
+        inc_counter $mainf/counter
+        save "app-$result" $localf/appid
     else
-        local count=1
-        echo $count > $mainf/counter
-    fi
-
-    if [[ $appid == app-* ]]; then
-        if [ ! -e $localf/appid ]; then
-            echo "app-"$count > $localf/appid
-        fi
-    else
-        echo $appid > $localf/appid
+        save $appid $localf/appid
     fi
 
     jappid=`cat $localf/appid`
@@ -326,7 +321,8 @@ waitforredis() {
     local port=$1
 
     while : ; do
-        local present=`ps ax | grep redis-server | grep $port | wc -l`
+        echo "Waitng........................."
+        local present=`ps ax | grep redis-server | grep $port | wc -l | tr -d [:space:]`
         if [ $present == "1" ]; then
             break
         fi
@@ -354,6 +350,10 @@ resolvedocker() {
 }
 
 
+###
+# Main script execution begins here...
+#
+
 # Initialize all the option variables.
 app=app-n
 type=device
@@ -363,6 +363,7 @@ tags=
 bg=
 old=
 porttaken=0
+tmuxid=
 
 file=$1
 shift
@@ -398,6 +399,7 @@ while :; do
         --app=)            # Handle the case of an empty
             die 'ERROR: "--args" requires a non-empty option argument.'
             ;;
+
         -t|--tags)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 tags=$2
@@ -411,6 +413,20 @@ while :; do
             ;;
         --tags=)            # Handle the case of an empty
             die 'ERROR: "--tags" requires a non-empty option argument.'
+            ;;
+        -m|--tmux)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                tmuxid=$2
+                shift
+            else
+                die 'ERROR: "--tmux" requires a non-empty option argument.'
+            fi
+            ;;
+        --tmux=?*)
+            tmuxid=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            ;;
+        --tmux=)            # Handle the case of an empty
+            die 'ERROR: "--tmux" requires a non-empty option argument.'
             ;;
         -n|--num)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
@@ -522,8 +538,8 @@ if [ -e "$file" ]; then
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
-                getappid $jamfolder $folder $app
                 create_missingdir $folder/$iport
+                getappid $jamfolder $folder/$iport $app
                 dojamout $type $iport $folder
             ;;
             fog)
@@ -533,8 +549,8 @@ if [ -e "$file" ]; then
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
-                getappid $jamfolder $folder $app
                 create_missingdir $folder/$iport
+                getappid $jamfolder $folder/$iport $app
                 dojamout $type $iport $folder
             ;;
             device)
@@ -544,8 +560,8 @@ if [ -e "$file" ]; then
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
-                getappid $jamfolder $folder $app
                 create_missingdir $folder/$iport
+                getappid $jamfolder $folder/$iport $app
                 dojamout_p1 $type $iport $folder
                 setuptmux $folder/$iport
                 doaout $num $iport

@@ -68,16 +68,16 @@ runatcloud() {
             docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data
         else
 
-            echo $dockid"-cloud" > $appfolder/$dockid/tmuxid
-            tmux new-session -s $dockid"-cloud" -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data
+            echo $dockid > $appfolder/$dockid/tmuxid
+            tmux new-session -s $dockid -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data
         fi
     else
         if [ -z $bg ]; then
             echo "-" > $appfolder/$dockid/tmuxid
             docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data --tag=$tags
         else
-            echo $dockid"-cloud" > $appfolder/$dockid/tmuxid
-            tmux new-session -s $dockid"-cloud" -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data --tag=$tags
+            echo $dockid > $appfolder/$dockid/tmuxid
+            tmux new-session -s $dockid -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data --tag=$tags
         fi
     fi
 }
@@ -95,16 +95,16 @@ runatfog() {
             echo "-" > $appfolder/$dockid/tmuxid
             docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data
         else
-            echo $dockid"-fog" > $appfolder/$dockid/tmuxid
-            tmux new-session -s $dockid"-fog" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data
+            echo $dockid > $appfolder/$dockid/tmuxid
+            tmux new-session -s $dockid -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data
         fi
     else
         if [ -z $bg ]; then
             echo "-" > $appfolder/$dockid/tmuxid
             docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data --tag=$tags
         else
-            echo $dockid"-fog" > $appfolder/$dockid/tmuxid
-            tmux new-session -s $dockid"-fog" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data --tag=$tags
+            echo $dockid > $appfolder/$dockid/tmuxid
+            tmux new-session -s $dockid -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data --tag=$tags
         fi
     fi
 }
@@ -119,39 +119,24 @@ runatdevice() {
     local tags=$6
 
     echo $num > $appfolder/$dockid/cdevs
+    echo "$dockid-c" > $appfolder/$dockid/tmuxid_c
 
-    # Start J
     if [ -z $tags ]; then
-        echo $dockid"-dev" > $appfolder/$dockid/tmuxid
-        tmux new-session -s $dockid"-dev" -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jrun $file --app=$appid  --data=$data --group=$dockid
-
-#        for i in `seq 1 $num`; do
-#            tmux new-session -s $dockid"-dev-"$i -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid crun $file --app=$appid --num=$i --group=$dockid
-#        done
-
-        echo "Num $num"
-
-#        for i in `seq 1 $num`; do
-            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid crun $file --app=$appid --group=$dockid
-#        done
-
-
-#        if [ -z $bg ]; then
-#            tmux attach-session -t $dockid"-dev"
-#        fi
-
-    else
-        echo $dockid"-dev" > $appfolder/$dockid/tmuxid
-        tmux new-session -s $dockid"-dev" -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jrun $file --app=$appid  --data=$data --group=$dockid
-
-        for i in `seq 1 $num`; do
-            tmux new-session -s $dockid"-dev-"$i -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid crun $file --app=$appid  --num=$i --group=$dockid
-        done
-
         if [ -z $bg ]; then
-            tmux attach-session -t $dockid"-dev"
+            echo "-" > $appfolder/$dockid/tmuxid
+            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c"
+        else
+            echo $dockid"-j" > $appfolder/$dockid/tmuxid
+            tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c"
         fi
-
+    else
+        if [ -z $bg ]; then
+            echo "-" > $appfolder/$dockid/tmuxid
+            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c"
+        else
+            echo $dockid"-j" > $appfolder/$dockid/tmuxid
+            tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c"
+        fi
     fi
 
 }
@@ -182,19 +167,23 @@ dojamrun() {
 }
 
 
+# we generate a new app-XX only if the
+# input is app-n, otherwise the jappid (output) is
+# the input argument ($1)
 getappid() {
     local appid=$1
+    local docki=$2
 
     inc_counter $jamfolder/counter
     count=$result
 
     if [ $appid == "app-n" ]; then
-        save_no_overwrite "app-"$count $appfolder/appid
+        save_no_overwrite "app-"$count $appfolder/$docki/appid
     else
-        save $appid $appfolder/appid
+        save $appid $appfolder/$docki/appid
     fi
 
-    jappid=`cat $appfolder/appid`
+    jappid=`cat $appfolder/$docki/appid`
 }
 
 
@@ -205,7 +194,7 @@ getdockerid() {
 
         inc_counter $jamfolder/counter
         local count=$result
-        dockerid="u-"$UID"-$type-"$count
+        dockerid="u-"$UID"-${type:0:3}-"$count
         result="new"
     else
         dockerid=$rundock
@@ -479,10 +468,13 @@ if [ -e "$file" ]; then
     # cd into the $appfolder
     cd $appfolder
 
-    getappid $app
     getdockerid $runon
+    docktype=$result
+    create_missingdir $appfolder/$dockerid
+    getappid $app $dockerid
 
-    if [ $result == "new" ]; then
+
+    if [ $docktype == "new" ]; then
         # We are also putting resources such as redis on the container
         make_container $type $dockerid
     else
@@ -490,7 +482,7 @@ if [ -e "$file" ]; then
         reuse_container $type $dockerid
     fi
 
-    create_missingdir $appfolder/$dockerid
+
     docker cp $file $dockerid:`basename $file`
     dojamrun $type $dockerid `basename $file` $num
     if [ -z $bg ]; then

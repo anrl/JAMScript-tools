@@ -1,0 +1,34 @@
+#!/bin/bash
+
+IDIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$IDIR" ]]; then IDIR="$PWD"; fi
+source "$IDIR/inc/misc_tools.sh"
+
+show_usage() {
+    cat << EOF
+
+djambuild or djambuild -h or djambuild --help prints this help
+information.
+
+djambuild repository
+builds a new docker image of the current JAMScript version. It uses the JAMScript source
+from https://github.com/anrl/JAMScript-beta. If the reposity it not given it pushes the
+new build to mahes25/jamscript.
+
+EOF
+}
+
+
+if [ -z $JAMHOME ]; then
+    echo "$JAMHOME not set. $JAMHOME needs to point towards a JAMScript source directory."
+    die
+fi
+
+docker build --no-cache -t jamscript $JAMHOME/scripts/install/Dockerfile
+if [ -z $1 ]; then
+    docker tag jamscript mahes25/jamscript
+    docker push mahes25/jamscript
+else
+    docker tag jamscript $1
+    docker push $1
+fi

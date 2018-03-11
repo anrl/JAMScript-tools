@@ -162,6 +162,12 @@ while :; do
     shift
 done
 
+
+echo "Don't use jrun and crun! Use jamrun instead of them."
+echo "Exiting."
+exit
+
+
 if [ -e "$file" ]; then
 
     # Check whether the global __jamruns folder is there
