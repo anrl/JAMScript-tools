@@ -58,7 +58,7 @@ case $jcmd in
         djaminit $params
         ;;
     term)
-        jamterm $params
+        djamterm $params
         ;;
     test)
         djamtest $params
