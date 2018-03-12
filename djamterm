@@ -67,7 +67,7 @@ dockertmux() {
                             local dtm=`cat $dir/tmuxid_c | tr -d [:space:]`
                             if [ $dtm == $tmuxapp ]; then
                                 echo "Calling docker .. on " `cat $dir/dockerId`
-                                docker exec -it `cat $dir/dockerId` jam term $tmuxapp $termno
+                                docker exec -ti `cat $dir/dockerId` script -q -c "/usr/bin/tmux attach -t $tmuxapp-$termno" /dev/null
                                 break
                             fi
                         fi
