@@ -216,7 +216,6 @@ dojamout_p2_bg() {
 
 doaout() {
     local counter=1
-    local indx=0
     local num=$1
     local port=$2
 
@@ -228,13 +227,12 @@ doaout() {
         if [ -e a.out ]; then
             # execute the program.. we are in the folder..
             if [ -z "$tags" ]; then
-                $TMUX new-session -s $tmuxapp-$indx "./a.out -a $jappid -p $port -n $counter"
+                $TMUX new-session -s $tmuxapp-$counter -d  "./a.out -a $jappid -p $port -n $counter"
             else
-                $TMUX new-session -s $tmuxapp-$indx "./a.out -a $jappid -p $port -t $tags -n $counter"
+                $TMUX new-session -s $tmuxapp-$counter -d  "./a.out -a $jappid -p $port -t $tags -n $counter"
             fi
         fi
         ((counter++))
-        ((indx++))
     done
 }
 
@@ -270,6 +268,8 @@ setuptmux() {
     else
         tmuxapp=$tmuxid
     fi
+
+    echo $tmuxapp > $1/tmuxid
 
     trap cleanuptmux SIGINT
 }
