@@ -60,6 +60,11 @@ Use the --bg option to run a command in the backgroud.
 Use the --old option to run the previous version in __jamruns folder.
 You can edit that version and rerun a custom version of a file.
 
+Use the --log option to turn on logging. This is useful for programs where
+the C side is crashing at the startup. The tmux console would not run when
+the program crash at startup. So the --log option allows us to see the
+program error messages.
+
 
 Usage: jamrun file.jxe [--app=appl_name] [--fog|--cloud] [--num=num_c_devs]
                                     [--data=data-url]
@@ -226,10 +231,18 @@ doaout() {
     while [ $counter -le $num ]; do
         if [ -e a.out ]; then
             # execute the program.. we are in the folder..
-            if [ -z "$tags" ]; then
-                $TMUX new-session -s $tmuxapp-$counter -d  "./a.out -a $jappid -p $port -n $counter"
+            if [ -z $log ]; then
+                if [ -z "$tags" ]; then
+                    $TMUX new-session -s $tmuxapp-$counter -d  "./a.out -a $jappid -p $port -n $counter"
+                else
+                    $TMUX new-session -s $tmuxapp-$counter -d  "./a.out -a $jappid -p $port -t $tags -n $counter"
+                fi
             else
-                $TMUX new-session -s $tmuxapp-$counter -d  "./a.out -a $jappid -p $port -t $tags -n $counter"
+                if [ -z "$tags" ]; then
+                    $TMUX new-session -s $tmuxapp-$counter -d  "script -a -t 1 log ./a.out -a $jappid -p $port -n $counter"
+                else
+                    $TMUX new-session -s $tmuxapp-$counter -d  "script -a -t 1 log ./a.out -a $jappid -p $port -t $tags -n $counter"
+                fi
             fi
         fi
         ((counter++))
@@ -310,7 +323,6 @@ waitforredis() {
     local port=$1
 
     while : ; do
-        echo "Waitng........................."
         local present=`ps ax | grep redis-server | grep $port | wc -l | tr -d [:space:]`
         if [ $present == "1" ]; then
             break
@@ -353,6 +365,7 @@ bg=
 old=
 porttaken=0
 tmuxid=
+log=
 
 file=$1
 shift
@@ -464,6 +477,9 @@ while :; do
         -b|--bg)
             bg=1
             ;;
+        -l|--log)
+            log=1
+            ;;
         -o|--old)
             old=1
             ;;
@@ -555,7 +571,9 @@ if [ -e "$file" ]; then
                 setuptmux $folder/$iport
                 doaout $num $iport
                 dojamout_p2 $type $iport $folder
-                cleanuptmux
+                if [ -z $bg ]; then
+                    cleanuptmux
+                fi
             ;;
         esac
     else
