@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# djam exec file --program=prog --app=app_name --type=node_type
+IDIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$IDIR" ]]; then IDIR="$PWD"; fi
+source "$IDIR/inc/misc_tools.sh"
 
-# We reuse the containers of the existing program run: MQTT, Redis and all ports
-# need to be the same.
-# IMPORTANT to form the correct local execution command!!
 
 die() {
     printf '%s\n' "$1" >&2
@@ -13,15 +12,18 @@ die() {
 
 show_usage() {
     cat << EOF
+This command executes the given command in the docker containers that are
+already executing the target program under the given application ID.
 
-djamexec --program=program --app=appl_name --type=node_type command
+If the program and application ID are not specified, we use the containers
+executing the last launched (active) program.
 
-NOTE: here the command is at the end!
+Usage: djamexec [--program=program --app=appl_name --type=node_type] command
 
-"command" could be file.jxe or some Linux command (e.g., ls) with arguments.
+NOTE: djamexec differs from the rest because the command is at the end.
 
-This "command" will be executed in the docker containers that are already
-running the target program under the given application name (appl_name).
+The "command" could be JAMScript executable (file.jxe) or some
+arbitrary Linux command (e.g., ls) with arguments.
 
 If no running instance is found, an error message will be printed.
 
@@ -119,26 +121,35 @@ shift
 rest=$*
 
 # Check folder
-jamfolder=$HOME"/__jamruns/apps"
-if [ ! -d $jamfolder ]; then
-    die "ERROR! No running instance found. "
-fi
+appsfolder=$HOME"/__jamruns/apps"
+exit_missingdir $appsfolder "ERROR! No running instance found. "
 
 if [ -z $program ]; then
-    die "Target not specified.. cannot locate the running application."
+    if [ -e $appsfolder/program ]; then
+        program=`cat $appsfolder/program`
+    else
+        die "Cannot execute with empty program name"
+    fi
+fi
+
+if [ -z $app ]; then
+    if [ -e $appsfolder/app ]; then
+        app=`cat $appsfolder/app`
+    else
+        die "Cannot execute with empty application ID"
+    fi
 fi
 
 tname="${program%.*}"
 tname=$tname"_"$app
 fext="${file##*.}"
 
+if [ "$(ls -A $appsfolder)" ]; then
 
-if [ "$(ls -A $jamfolder)" ]; then
+    cd $appsfolder
 
-    cd $jamfolder
-
-    for jruns in `ls $jamfolder/$tname`; do
-        dir=$jamfolder/$tname/$jruns
+    for jruns in `ls $appsfolder/$tname`; do
+        dir=$appsfolder/$tname/$jruns
         if [ -d $dir ]; then
             checkdocker $dir
             if [ $running == "docker" ]; then

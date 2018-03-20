@@ -71,6 +71,7 @@ Usage: jamrun file.jxe [--app=appl_name] [--fog|--cloud] [--num=num_c_devs]
                                     [--tags=quoted_list_of_tags]
                                     [--bg]
                                     [--old]
+                                    [--log]
 
 
 The jamrun command creates a run state in the $HOME/__jamrun folder.
@@ -103,9 +104,9 @@ dojamout_p1() {
     local floc=$3
 
     startmqtt $pnum
-    echo $data > $floc/$pnum/dataStore
+    echo "$data" > $floc/$pnum/dataStore
     echo "process" > $floc/$pnum/class
-    echo $SHELLPID > $floc/$pnum/shellpid
+    echo "$SHELLPID" > $floc/$pnum/shellpid
     echo "new" > $floc/$pnum/processId
 }
 
@@ -282,7 +283,8 @@ setuptmux() {
         tmuxapp=$tmuxid
     fi
 
-    echo $tmuxapp > $1/tmuxid
+    echo "$tmuxapp" > $1/tmuxid
+    save "$tmuxapp" $appfolder/tmuxid
 
     trap cleanuptmux SIGINT
 }
@@ -297,10 +299,12 @@ getappid() {
         inc_counter $mainf/counter
         save "app-$result" $localf/appid
     else
-        save $appid $localf/appid
+        save "$appid" $localf/appid
     fi
 
     jappid=`cat $localf/appid`
+    # save for short cut use
+    save "$jappid" $appfolder/appid
 }
 
 
@@ -533,8 +537,11 @@ if [ -e "$file" ]; then
     resolvedocker $data
 
     if [ -e jamout.js ]; then
-        # execute the program.. we are in the folder..
+        # save the current program information for short cut use
+        save "$filenoext" $appfolder/program
+        save "$app" $appfolder/app
 
+        # execute the program.. we are in the folder..
         case $type in
             cloud)
                 iport=9883

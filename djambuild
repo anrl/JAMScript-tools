@@ -6,14 +6,17 @@ source "$IDIR/inc/misc_tools.sh"
 
 show_usage() {
     cat << EOF
+Builds a new docker image using the current JAMScript version in the github repo
+at https://github.com/anrl/JAMScript-beta.
 
-djambuild or djambuild -h or djambuild --help prints this help
-information.
+Usage: djambuild [repo]
+
+djambuild -h
+djambuild --help
+Prints this help message.
 
 djambuild repository
-builds a new docker image of the current JAMScript version. It uses the JAMScript source
-from https://github.com/anrl/JAMScript-beta. If the reposity it not given it pushes the
-new build to mahes25/jamscript.
+Builds a new jamscript docker image and uploads to the given repository.
 
 EOF
 }
@@ -24,11 +27,15 @@ if [ -z $JAMHOME ]; then
     die
 fi
 
-docker build --no-cache -t jamscript $JAMHOME/scripts/install
 if [ -z $1 ]; then
+    docker build --no-cache -t jamscript $JAMHOME/scripts/install
     docker tag jamscript mahes25/jamscript
     docker push mahes25/jamscript
+elif [ $1 == "-h" ] || [ $1 == "--help" ]; then
+    show_usage
+    exit
 else
+    docker build --no-cache -t jamscript $JAMHOME/scripts/install
     docker tag jamscript $1
     docker push $1
 fi

@@ -45,6 +45,7 @@ Usage: djamrun file.jxe [--app=appl_name] [--fog|--cloud] [--num=num_c_devs]
                                     [--tags=quoted_list_of_tags]
                                     [--bg]
                                     [--runon=container_to_run]
+                                    [--log]
 
 
 The djamrun command creates a run state in the $HOME/__jamrun folder.
@@ -64,19 +65,19 @@ runatcloud() {
 
     if [ -z $tags ]; then
         if [ -z $bg ]; then
-            echo "-" > $appfolder/$dockid/tmuxid
+            echo "-" > $thisappfolder/$dockid/tmuxid
             docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data
         else
 
-            echo $dockid > $appfolder/$dockid/tmuxid
+            echo $dockid > $thisappfolder/$dockid/tmuxid
             tmux new-session -s $dockid -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data
         fi
     else
         if [ -z $bg ]; then
-            echo "-" > $appfolder/$dockid/tmuxid
+            echo "-" > $thisappfolder/$dockid/tmuxid
             docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data --tag=$tags
         else
-            echo $dockid > $appfolder/$dockid/tmuxid
+            echo $dockid > $thisappfolder/$dockid/tmuxid
             tmux new-session -s $dockid -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data --tag=$tags
         fi
     fi
@@ -92,18 +93,18 @@ runatfog() {
 
     if [ -z $tags ]; then
         if [ -z $bg ]; then
-            echo "-" > $appfolder/$dockid/tmuxid
+            echo "-" > $thisappfolder/$dockid/tmuxid
             docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data
         else
-            echo $dockid > $appfolder/$dockid/tmuxid
+            echo $dockid > $thisappfolder/$dockid/tmuxid
             tmux new-session -s $dockid -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data
         fi
     else
         if [ -z $bg ]; then
-            echo "-" > $appfolder/$dockid/tmuxid
+            echo "-" > $thisappfolder/$dockid/tmuxid
             docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data --tag=$tags
         else
-            echo $dockid > $appfolder/$dockid/tmuxid
+            echo $dockid > $thisappfolder/$dockid/tmuxid
             tmux new-session -s $dockid -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data --tag=$tags
         fi
     fi
@@ -118,27 +119,49 @@ runatdevice() {
     local num=$5
     local tags=$6
 
-    echo $num > $appfolder/$dockid/cdevs
-    echo "$dockid-c" > $appfolder/$dockid/tmuxid_c
+    echo $num > $thisappfolder/$dockid/cdevs
+    echo "$dockid-c" > $thisappfolder/$dockid/tmuxid_c
 
-    if [ -z $tags ]; then
-        if [ -z $bg ]; then
-            echo "-" > $appfolder/$dockid/tmuxid
-            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c"
+    # save for short cut use
+    echo "$dockid-c" > $appfolder/tmuxid
+
+    if [ -z $log ]; then
+        if [ -z $tags ]; then
+            if [ -z $bg ]; then
+                echo "-" > $thisappfolder/$dockid/tmuxid
+                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c"
+            else
+                echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
+                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c"
+            fi
         else
-            echo $dockid"-j" > $appfolder/$dockid/tmuxid
-            tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c"
+            if [ -z $bg ]; then
+                echo "-" > $thisappfolder/$dockid/tmuxid
+                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c"
+            else
+                echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
+                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c"
+            fi
         fi
     else
-        if [ -z $bg ]; then
-            echo "-" > $appfolder/$dockid/tmuxid
-            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c"
+        if [ -z $tags ]; then
+            if [ -z $bg ]; then
+                echo "-" > $thisappfolder/$dockid/tmuxid
+                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c" --log=$log
+            else
+                echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
+                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c" --log=$log
+            fi
         else
-            echo $dockid"-j" > $appfolder/$dockid/tmuxid
-            tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c"
+            if [ -z $bg ]; then
+                echo "-" > $thisappfolder/$dockid/tmuxid
+                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c" --log=$log
+            else
+                echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
+                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c" --log=$log
+            fi
         fi
     fi
-
 }
 
 
@@ -148,10 +171,10 @@ dojamrun() {
     local file=$3
     local num=$4
 
-    save $type $appfolder/$dockid/machType
-    save $data $appfolder/$dockid/dataStore
-    save $dockerSer $appfolder/$dockid/dockerId
-    save "docker" $appfolder/$dockid/class
+    save $type $thisappfolder/$dockid/machType
+    save $data $thisappfolder/$dockid/dataStore
+    save $dockerSer $thisappfolder/$dockid/dockerId
+    save "docker" $thisappfolder/$dockid/class
 
     case $type in
         cloud)
@@ -178,12 +201,15 @@ getappid() {
     count=$result
 
     if [ $appid == "app-n" ]; then
-        save_no_overwrite "app-"$count $appfolder/$docki/appid
+        save_no_overwrite "app-"$count $thisappfolder/$docki/appid
     else
-        save $appid $appfolder/$docki/appid
+        save $appid $thisappfolder/$docki/appid
     fi
 
-    jappid=`cat $appfolder/$docki/appid`
+    jappid=`cat $thisappfolder/$docki/appid`
+
+    # save for short cut use
+    save "$jappid" $appfolder/appid
 }
 
 
@@ -277,11 +303,11 @@ removetmux() {
 
 removedockermach() {
 
-    local tmid=`cat $appfolder/$dockerid/tmuxid`
+    local tmid=`cat $thisappfolder/$dockerid/tmuxid`
     removetmux $tmid
 
-    if [ -e $appfolder/$dockerid/cdevs ]; then
-        local num=`cat $appfolder/$dockerid/cdevs`
+    if [ -e $thisappfolder/$dockerid/cdevs ]; then
+        local num=`cat $thisappfolder/$dockerid/cdevs`
         for i in `seq 1 $num`; do
             removetmux $tmid"-"$i
         done
@@ -303,6 +329,7 @@ data=docker:6379
 tags=
 num=1
 bg=
+log=
 runon=
 
 
@@ -415,6 +442,9 @@ while :; do
         -b|--bg)
             bg=1
             ;;
+        -l|--log)
+            log=1
+            ;;
         --)              # End of all options.
             shift
             break
@@ -446,14 +476,19 @@ exit_missingdir $jamfolder "__jamdir directory not found. Run djam pull first. "
 exit_missingdir $jamfolder/zones "zones not setup. Run djam init first"
 exit_missingfile $jamfolder/dockerImage "DockerImage not setup. Run djam pull first."
 
-create_missingdir $jamfolder/apps
+appfolder=$jamfolder/apps
+create_missingdir $appfolder
 
 if [ -e "$file" ]; then
 
     # Get the folder
     filenoext="${file%.*}"
-    appfolder=$HOME"/__jamruns/apps/"$filenoext"_"$app
-    create_missingdir $appfolder
+    thisappfolder=$appfolder"/"$filenoext"_"$app
+    create_missingdir $thisappfolder
+
+    # save for short cut use
+    save "$filenoext" $appfolder/program
+    save "$app" $appfolder/app
 
     # process the .jxe file
     file=`pwd`/$file
@@ -465,12 +500,12 @@ if [ -e "$file" ]; then
     dockerImage=`cat $jamfolder/dockerImage`
     createzonerouters
     createnetwork jamnet 10 $jamfolder
-    # cd into the $appfolder
-    cd $appfolder
+    # cd into the $thisappfolder
+    cd $thisappfolder
 
     getdockerid $runon
     docktype=$result
-    create_missingdir $appfolder/$dockerid
+    create_missingdir $thisappfolder/$dockerid
     getappid $app $dockerid
 
 

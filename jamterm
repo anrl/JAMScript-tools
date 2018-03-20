@@ -19,12 +19,21 @@ die() {
 
 show_usage() {
     cat << EOF
+Shows the background terminals with the given tmux-id and terminal-num.
 
-jamterm tmux-id [terminal-num]
-Shows the background terminals of with the given tmux-id and terminal-num.
+Usage: jamterm [tmux-id] [-t terminal-num]
 
-For example, to see the second terminal of a program running with u-600-dev-2331
-type jamterm u-600-dev-2331-2. Note that terminal-num is optional.
+jamterm
+Shows the first C terminal of the program that was last started.
+
+jamterm -t 2
+
+
+jamterm u-600-dev-2331 -t 2
+Shows the second C terminal of the program running under u-600-dev-2331.
+
+jamterm u-600-dev-2331
+Shows the first C terminal of the program running under u-600-dev-2331.
 
 EOF
 }
@@ -49,10 +58,40 @@ localtmux() {
 # Main script execution begins here...
 #
 
-if [ -z $1 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
-    show_usage
-    exit
+jamfolder=$HOME"/__jamruns"
+exit_missingdir $jamfolder "__jamruns folder missing. JAMScript tools not setup?"
+
+appsfolder=$jamfolder/apps
+exit_missingdir $appsfolder "__jamruns/apps folder missing. JAMScript tools not setup?"
+
+cd $appsfolder
+
+if [ -z $1 ]; then
+    if [ -e tmuxid ]; then
+        tmuxid=`cat tmuxid`
+        localtmux $tmuxid 1
+        exit
+    fi
+else
+    # Show help
+    if [ $1 == "-h" ] || [ $1 == "--help" ]; then
+        show_usage
+        exit
+    elif [ $1 == "-t" ]; then
+        if [ -e tmuxid ]; then
+            tmuxid=`cat tmuxid`
+            localtmux $tmuxid $2
+            exit
+        fi
+        exit
+    else
+        if [ -z $2 ]; then
+            termid=1
+        else
+            if [ -n $3 ] && [ $2 == "-t" ]; then
+                termid=$3
+            fi
+        fi
+        localtmux $1 $termid
+    fi
 fi
-
-
-localtmux $1 $2

@@ -25,9 +25,11 @@ djam kill   - Kill a particular application or all active applications.
 djam list   - Lists all the JAMScript programs running in the system.
 djam load   - Loads the given file into each node in the current topology.
               New file goes into the /jamfiles folder.
+djam log    - Shows the logs written by the C nodes. A good way to
+              see the debug messages from the C side.
 djam pull   - Pull the given docker image and make it the default
 djam run    - Start a device, fog, or cloud
-djam term   - Reattach to a tmux terminal ofa running JAMScript instance
+djam term   - Reattach to a tmux terminal of a running JAMScript instance
               Use the 'list' command to find out the ID to connect.
 djam test   - Configures a test topology based on the parameter provided in 'init'.
 djam stat   - Get the configuration status of djam installation.
@@ -68,6 +70,9 @@ case $jcmd in
         ;;
     clean)
         jamclean $params
+        ;;
+    log)
+        djamlog $params
         ;;
     run)
         djamrun $params

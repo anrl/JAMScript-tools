@@ -19,14 +19,27 @@ die() {
 
 show_usage() {
     cat << EOF
+Shows the background terminals of with the given tmux-id and terminal-num
+running in the docker machines.
 
-djamterm tmux-id [terminal-num]
-Shows the background terminals of with the given tmux-id and terminal-num.
+Usage: djamterm [tmux-id] [-t terminal-num]
 
 This is the docker version of the jamterm command.
 
-For example, to see the second terminal of a program running with u-600-dev-2331
-type jamterm u-600-dev-2331-2. Note that terminal-num is optional.
+djamterm
+Shows the first C terminal of the program that was last started.
+
+djamterm -t 2
+Shows the second C terminal of the program that was last started.
+
+djamterm u-600-dev-2331-c -t 2
+Shows the second C terminal of the program running under u-600-dev-2331.
+
+djamterm u-600-dev-2331-c
+Shows the first C terminal of the program running under u-600-dev-2331.
+
+djamterm u-600-dev-2331-j
+Shows the J terminal of the program running under u-600-dev-2331.
 
 EOF
 }
@@ -59,7 +72,7 @@ dockertmux() {
         if [ $jruns != "*/" ]; then
             for jexs in `ls $appsfolder/$jruns`; do
                 dir=$appsfolder/$jruns$jexs
-                if [ -d $dir ]; then
+                if [ -d $dir ] && [ -e $dir/class ]; then
                     local dcl=`cat $dir/class | tr -d [:space:]`
 
                     if [ $dcl == "docker" ]; then
@@ -82,17 +95,47 @@ dockertmux() {
 # Main script execution begins here...
 #
 
-if [ -z $1 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
-    show_usage
-    exit
-fi
+jamfolder=$HOME"/__jamruns"
+exit_missingdir $jamfolder "__jamruns folder missing. JAMScript tools not setup?"
 
-txid=$1
-termi=$2
+appsfolder=$jamfolder/apps
+exit_missingdir $appsfolder "__jamruns/apps folder missing. JAMScript tools not setup?"
 
-if [ ${txid: -1} == "c" ]; then
-    # Connect to the docker to display the C panes
-    dockertmux $1 $2
+cd $appsfolder
+
+
+if [ -z $1 ]; then
+    if [ -e tmuxid ]; then
+        tmuxid=`cat tmuxid`
+        dockertmux $tmuxid 1
+        exit # this improves the readability of the script later - not needed!
+    fi
 else
-    localtmux $1 $2
+    # Show help
+    if [ $1 == "-h" ] || [ $1 == "--help" ]; then
+        show_usage
+        exit # readability improver!
+    elif [ $1 == "-t" ]; then
+        if [ -e tmuxid ]; then
+            tmuxid=`cat tmuxid`
+            dockertmux $tmuxid $2
+        fi
+        exit # readability improver!
+    else
+        if [ -z $2 ]; then
+            txid=$1
+            if [ ${txid: -1} == "c" ]; then
+                # Connect to the docker to display the C panes
+                dockertmux $txid 1
+            else
+                localtmux $txid
+            fi
+            exit # readability improver!
+        else
+            if [ -n $3 ] && [ $2 == "-t" ]; then
+                termid=$3
+                dockertmux $1 $termid
+            fi
+        fi
+    fi
 fi

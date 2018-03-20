@@ -19,13 +19,21 @@ die() {
 
 show_usage() {
     cat << EOF
+Kill running instances of the application.
+
+Usage: jamkill [--all|app-id|--help]
+
+jamkill
+kill the program started last among the currently running ones
+
+jamkill --help
+displays this help messages
+
 jamkill --all
 kills all running instances
 
 jamkill app-id
-kills all running instances that are from application app-id
-
-Usage: jamkill --all|app-id
+kills all running instances that were started under app-id
 
 EOF
 }
@@ -108,26 +116,27 @@ killalljobs() {
 
 }
 
-
-if [ -z $1 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
-    show_usage
-    exit
-fi
-
-
 jamfolder=$HOME"/__jamruns"
-exit_missingdir $jamfolder "No running instances of JAMScript."
+exit_missingdir $jamfolder "__jamruns folder missing. JAMScript tools not setup?"
 
 appsfolder=$jamfolder/apps
+exit_missingdir $appsfolder "__jamruns/apps folder missing. JAMScript tools not setup?"
 
-if [ "$(ls -A $appsfolder)" ]; then
+cd $appsfolder
 
-    cd $appsfolder
-
-    if [ $1 == "--all" ]; then
-        killalljobs
-        exit
+if [ -z $1 ]; then
+    if [ -e appid ]; then
+        appid=`cat appid`
+        killjob $appid
     fi
-
-    killjob $1
+else
+    # Show help
+    if [ $1 == "-h" ] || [ $1 == "--help" ]; then
+        show_usage
+        exit
+    elif [ $1 == "--all" ]; then
+        killalljobs
+    else
+        killjob $1
+    fi
 fi
