@@ -15,8 +15,10 @@ killrouterpumba() {
 
 startrouterpumba() {
 
-    local routercmd=`cat $jamfolder/pumba/outfog_cmd`
-    $routercmd $@ &
+    if [ $pumbastatus == "on" ]; then
+        local routercmd=`cat $jamfolder/pumba/outfog_cmd`
+        $routercmd $@ &
+    fi 
 }
 
 restartrouterpumba() {
@@ -41,8 +43,10 @@ killfogpumba() {
 
 startfogpumba() {
 
-    local fogcmd=`cat $jamfolder/pumba/infog_cmd`
-    $fogcmd $@ &
+    if [ $pumbastatus == "on" ]; then
+        local fogcmd=`cat $jamfolder/pumba/infog_cmd`
+        $fogcmd $@ &
+    fi
 }
 
 restartfogpumba() {
@@ -67,8 +71,10 @@ killcloudpumba() {
 
 startcloudpumba() {
 
-    local cloudcmd=`cat $jamfolder/pumba/cloud_cmd`
-    $cloudcmd $@ &
+    if [ $pumbastatus == "on" ]; then
+        local cloudcmd=`cat $jamfolder/pumba/cloud_cmd`
+        $cloudcmd $@ &
+    fi
 }
 
 restartcloudpumba() {

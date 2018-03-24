@@ -160,7 +160,6 @@ check_jamhome() {
     fi
 }
 
-
 dojamout_p2_fg() {
     local type=$1
     local pnum=$2
@@ -204,6 +203,7 @@ dojamout_p2_fg() {
             ;;
     esac
 }
+
 
 
 dojamout_p2_bg() {
@@ -263,17 +263,9 @@ doaout() {
                 fi
             else
                 if [ -z "$tags" ]; then
-                    if [ uname == "Linux" ]; then
-                        $TMUX new-session -s $tmuxapp-$counter -d  script -a -c "./a.out -a $jappid -p $port -n $counter" -f log
-                    else
-                        $TMUX new-session -s $tmuxapp-$counter -d  "script -a -t 1 log ./a.out -a $jappid -p $port -n $counter"
-                    fi
+                    $TMUX new-session -s $tmuxapp-$counter -d  "script -a -t 1 log ./a.out -a $jappid -p $port -n $counter"
                 else
-                    if [ uname == "Linux" ]; then
-                        $TMUX new-session -s $tmuxapp-$counter -d  script -a -c "./a.out -a $jappid -p $port -t $tags -n $counter" -f log
-                    else
-                        $TMUX new-session -s $tmuxapp-$counter -d  "script -a -t 1 log ./a.out -a $jappid -p $port -t $tags -n $counter"
-                    fi
+                    $TMUX new-session -s $tmuxapp-$counter -d  "script -a -t 1 log ./a.out -a $jappid -p $port -t $tags -n $counter"
                 fi
             fi
         fi

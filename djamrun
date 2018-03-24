@@ -476,6 +476,8 @@ exit_missingdir $jamfolder "__jamdir directory not found. Run djam pull first. "
 exit_missingdir $jamfolder/zones "zones not setup. Run djam init first"
 exit_missingfile $jamfolder/dockerImage "DockerImage not setup. Run djam pull first."
 
+pumbastatus=`cat $jamfolder/pumba/status`
+
 appfolder=$jamfolder/apps
 create_missingdir $appfolder
 
@@ -497,8 +499,12 @@ if [ -e "$file" ]; then
         die "Problem with JAMScript executable"
     fi
 
+
+
     dockerImage=`cat $jamfolder/dockerImage`
+        echo "hi..."
     createzonerouters
+        echo "hi..."
     createnetwork jamnet 10 $jamfolder
     # cd into the $thisappfolder
     cd $thisappfolder
@@ -508,6 +514,7 @@ if [ -e "$file" ]; then
     create_missingdir $thisappfolder/$dockerid
     getappid $app $dockerid
 
+    echo "hi..."
 
     if [ $docktype == "new" ]; then
         # We are also putting resources such as redis on the container
@@ -517,6 +524,7 @@ if [ -e "$file" ]; then
         reuse_container $type $dockerid
     fi
 
+    echo "hi..."
 
     docker cp $file $dockerid:`basename $file`
     dojamrun $type $dockerid `basename $file` $num

@@ -132,9 +132,11 @@ create_missingdir $jamfolder/pumba
 
 if [ ! -z $ideal ]; then
     echo "off" > $jamfolder/pumba/status
+    create_missingdir $jamfolder/zones
+    echo "1" > $jamfolder/zones/count
     killrouterpumba
     killcloudpumba
-    killfogpumba    
+    killfogpumba
     exit
 fi
 
