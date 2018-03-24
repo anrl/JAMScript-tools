@@ -6,112 +6,24 @@ source "$IDIR/inc/misc_tools.sh"
 
 SHELLPID=$$
 trap cleanup SIGTERM SIGINT
+TMUX=`which tmux`
 
 die() {
     printf '%s\n' "$1" >&2
     exit 1
 }
 
-
-MOSQUITTO=`which mosquitto`
-MOSQUITTO_PUB=`which mosquitto_pub`
-TMUX=`which tmux`
-
-if [ -z $MOSQUITTO ]; then
-    die "mosquitto (MQTT broker) not installed. Quitting."
-fi
-if [ -z $MOSQUITTO_PUB ]; then
-    die "mosquitto_pub (MQTT tools) not installed. Quitting."
-fi
-if [ -z $TMUX ]; then
-    die "tmux not installed. Quitting."
-fi
-
-
 show_usage() {
     cat << EOF
-jamrun program.jxe
-Runs J and C node, one each, of a device with program.jxe
-under a default application name 'app-N'. To run under a different
-app name X, use the --app=X option.
+Stripped down version of jamrun for use by the shell. Unlike jamrun, jamexec
+assumes all resources except tmux terminals are available and reuses them.
 
-jamrun program.jxe --fog
-Runs a fog node (only J node) with program.jxe. Similarly, the --cloud
-flag runs a cloud node.
-
-By default, jamrun uses a Redis server running at 127.0.0.1:6379 as the
-data store. The Redis server needs to be started before launching the
-application. To use a different Redis server use the --data option.
-
-jamrun program.jxe --data=127.0.0.1:7000
-Runs program.jxe and connects it to an already running Redis server at
-port 7000 of the local host. Redis server can run outside the
-local host (Redis needs to the configured to accept outside
-connections).
-
-To start more than one C node at a device use the following command.
-jamrun program.jxe --num=4
-
-To provide a set of tags to the program, use the following command.
-jamrun program.jxe --tag="param1, param2"
-
-Use the --bg option to run a command in the backgroud.
-
-Use the --old option to run the previous version in __jamruns folder.
-You can edit that version and rerun a custom version of a file.
-
-Use the --log option to turn on logging. This is useful for programs where
-the C side is crashing at the startup. The tmux console would not run when
-the program crash at startup. So the --log option allows us to see the
-program error messages.
-
-
-Usage: jamrun file.jxe [--app=appl_name] [--fog|--cloud] [--num=num_c_devs]
+Usage: jamexec file.jxe [--app=appl_name] [--fog|--cloud] [--num=num_c_devs]
                                     [--data=data-url]
                                     [--tags=quoted_list_of_tags]
                                     [--bg]
-                                    [--old]
                                     [--log]
-
-
-The jamrun command creates a run state in the $HOME/__jamrun folder.
 EOF
-}
-
-
-create_lock_or_wait() {
-    local path="$1"
-    local type="$2"
-    local wait_time=$((($RANDOM % 10) + 1))
-    while true; do
-        if mkdir "${path}/lock_${type}"; then
-            break
-        fi
-        sleep $wait_time
-    done
-}
-
-remove_lock() {
-    local path="$1"
-    local type="$2"
-    rmdir "${path}/lock_${type}"
-}
-
-
-
-
-
-
-startmqtt() {
-    local port=$1
-
-    # Check whether the MQTT server is running.. if not start it
-    $MOSQUITTO_PUB -p $port -t "test" -m "hello"
-    if [ $? -ne 0 ]; then
-        echo "MQTT is not running at $port"
-        echo "Attempting to start MQTT at $port"
-        $MOSQUITTO -p $port &
-    fi
 }
 
 
@@ -126,7 +38,6 @@ dojamout_p1() {
     local pnum=$2
     local floc=$3
 
-    startmqtt $pnum
     echo "$data" > $floc/$pnum/dataStore
     echo "process" > $floc/$pnum/class
     echo "$SHELLPID" > $floc/$pnum/shellpid
@@ -199,7 +110,11 @@ dojamout_p2_fg() {
             else
                 node jamout.js --app=$jappid --port=$pnum --data=$data --tags=$tags
             fi
-            kill `cat $floc/$pnum/jviewshell`
+            vpid=`cat $floc/$pnum/jviewshell`
+            local pid=`ps -o pid= -p $vpid`
+            if [ ! -z $pid ]; then
+                kill $pid
+            fi
             ;;
     esac
 }
@@ -273,30 +188,6 @@ doaout() {
     done
 }
 
-# This is always scanning for a command with 'node'
-portavailable() {
-    local folder=$1
-    local port=$2
-
-    if [ -d $folder/$port ]; then
-        if [ -e $folder/$port/processId ]; then
-            local pid=`cat $folder/$port/processId`
-            if [ $pid == "new" ]; then
-                porttaken=1
-            elif [ ! -z $pid ]; then
-                porttaken=`ps -p $pid | grep node | wc -l | tr -d [:space:]`
-            else
-                porttaken=0
-            fi
-        else
-            porttaken=0
-        fi
-    else
-        porttaken=0
-    fi
-
-}
-
 
 setuptmux() {
 
@@ -326,8 +217,6 @@ getappid() {
     fi
 
     jappid=`cat $localf/appid`
-    # save for short cut use
-    save "$jappid" $appfolder/appid
 }
 
 
@@ -340,41 +229,31 @@ cleanuptmux() {
 
 
 
-startredis() {
+# We are already in the correct foldler
+# We should find MANIFEST if there is a previous version in the current folder
+# We unzip to the current folder if needed.
+unpack() {
+    local file=$1
 
-    # Start redis with no protected-mode and at the port
-    echo -e "port $1\nprotected-mode no" | redis-server - &
-}
-
-waitforredis() {
-    local port=$1
-
-    while : ; do
-        local present=`ps ax | grep redis-server | grep $port | wc -l | tr -d [:space:]`
-        if [ $present == "1" ]; then
-            break
+    if [ -z $old ]; then
+        if [ ! -e MANIFEST.txt ]; then
+            # there is no old file. unpack
+            unzip -oq $file
+            if [ $? -ne 0 ]; then
+                die "Problem reading file: $file"
+            fi
+        else
+            ntime=`zipgrep CREATE $file | awk '{split($0,a, " "); print a[3]}'`
+            otime=`grep CREATE MANIFEST.txt | awk '{split($0,a, " "); print a[3]}'`
+            if (( $ntime > $otime )); then
+                # newer file so unpack it
+                unzip -oq $file
+                if [ $? -ne 0 ]; then
+                    die "Problem reading file: $file"
+                fi
+            fi
         fi
-        sleep 1
-    done
-}
-
-
-
-resolvedocker() {
-    local name=$1
-
-    local host="${name%:*}"
-    local port="${name##*:}"
-
-    startredis $port
-    waitforredis $port
-
-    if [ $host == "docker" ]; then
-        local ipaddr=`hostname -I`
-        name=$ipaddr:$port
     fi
-    # trim space left behind by hostname -I
-    data=$(echo $name | tr -d [:space:])
 }
 
 
@@ -386,11 +265,11 @@ resolvedocker() {
 app=app-n
 type=device
 data=127.0.0.1:6379
+iport=1883
 num=1
 tags=
 bg=
 old=
-porttaken=0
 tmuxid=
 log=
 
@@ -428,7 +307,20 @@ while :; do
         --app=)            # Handle the case of an empty
             die 'ERROR: "--args" requires a non-empty option argument.'
             ;;
-
+        -p|--port)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                iport=$2
+                shift
+            else
+                die 'ERROR: "--port" requires a non-empty option argument.'
+            fi
+            ;;
+        --port=?*)
+            iport=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            ;;
+        --port=)            # Handle the case of an empty
+            die 'ERROR: "--port" requires a non-empty option argument.'
+            ;;
         -t|--tags)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 tags=$2
@@ -524,84 +416,38 @@ while :; do
     shift
 done
 
-# Check necessary parameters and set defaults
-
-if [ "$type" != "device" ] && [ -n "$num" ]; then
-    die "number of devices can't be speciied for fog/cloud"
-fi
 
 
 if [ -e "$file" ]; then
 
-    # Check whether the global __jamruns folder is there
     jamfolder=$HOME"/__jamruns"
-    create_missingdir $jamfolder
-
-    # Check whether the app folder is there
     appfolder=$jamfolder/apps
-    create_missingdir $appfolder
 
     # Get the folder
     filenoext="${file%.*}"
     folder=$appfolder/$filenoext"_"$app
     create_missingdir $folder
 
-    if [ -z $old ]; then
-        # unzip the executable in the folder and run it..
-        # We are unzipping the copying the files no matter what!
-        unzip -oq $file -d $folder
-        if [ $? -ne 0 ]; then
-            die "Problem reading file: $file"
-        fi
-    fi
-
+    #save handle to file
+    ifile=`pwd`/$file
     cd $folder
-
-    resolvedocker $data
+    unpack $ifile  # We are already in $folder
 
     if [ -e jamout.js ]; then
-        # save the current program information for short cut use
-        save "$filenoext" $appfolder/program
-        save "$app" $appfolder/app
 
         # execute the program.. we are in the folder..
         case $type in
             cloud)
-                iport=9883
-                create_lock_or_wait $folder $type
-                while [ : ]; do
-                    portavailable $folder $iport
-                    [[ $porttaken == 1 ]] || break
-                    ((iport++))
-                done
-                ( sleep 5; remove_lock $folder $type ) &
                 create_missingdir $folder/$iport
                 getappid $jamfolder $folder/$iport $app
                 dojamout $type $iport $folder
             ;;
             fog)
-                iport=5883
-                create_lock_or_wait $folder $type
-                while [ : ]; do
-                    portavailable $folder $iport
-                    [[ $porttaken == 1 ]] || break
-                    ((iport++))
-                done
-                ( sleep 5; remove_lock $folder $type ) &
                 create_missingdir $folder/$iport
                 getappid $jamfolder $folder/$iport $app
                 dojamout $type $iport $folder
             ;;
             device)
-                iport=1883
-                create_lock_or_wait $folder $type
-                while [ : ]; do
-                    portavailable $folder $iport
-                    [[ $porttaken == 1 ]] || break
-                    ((iport++))
-                done
-                ( sleep 5; remove_lock $folder $type ) &
-
                 create_missingdir $folder/$iport
                 getappid $jamfolder $folder/$iport $app
                 dojamout_p1 $type $iport $folder

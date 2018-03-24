@@ -79,29 +79,6 @@ EOF
 }
 
 
-create_lock_or_wait() {
-    local path="$1"
-    local type="$2"
-    local wait_time=$((($RANDOM % 10) + 1))
-    while true; do
-        if mkdir "${path}/lock_${type}"; then
-            break
-        fi
-        sleep $wait_time
-    done
-}
-
-remove_lock() {
-    local path="$1"
-    local type="$2"
-    rmdir "${path}/lock_${type}"
-}
-
-
-
-
-
-
 startmqtt() {
     local port=$1
 
@@ -200,7 +177,11 @@ dojamout_p2_fg() {
             else
                 node jamout.js --app=$jappid --port=$pnum --data=$data --tags=$tags
             fi
-            kill `cat $floc/$pnum/jviewshell`
+            vpid=`cat $floc/$pnum/jviewshell`
+            local pid=`ps -o pid= -p $vpid`
+            if [ ! -z $pid ]; then
+                kill $pid
+            fi
             ;;
     esac
 }
@@ -292,7 +273,7 @@ portavailable() {
             if [ $pid == "new" ]; then
                 porttaken=1
             elif [ ! -z $pid ]; then
-                porttaken=`ps -p $pid | grep node | wc -l | tr -d [:space:]`
+                porttaken=`ps -o pid= -p $pid | wc -l | tr -d [:space:]`
             else
                 porttaken=0
             fi
@@ -367,8 +348,7 @@ waitforredis() {
 }
 
 
-
-resolvedocker() {
+resolvedata() {
     local name=$1
 
     local host="${name%:*}"
@@ -383,6 +363,35 @@ resolvedocker() {
     fi
     # trim space left behind by hostname -I
     data=$(echo $name | tr -d [:space:])
+}
+
+
+# We are already in the correct foldler
+# We should find MANIFEST if there is a previous version in the current folder
+# We unzip to the current folder if needed.
+unpack() {
+    local file=$1
+
+    if [ -z $old ]; then
+        if [ ! -e MANIFEST.txt ]; then
+            # there is no old file. unpack
+            unzip -oq $file
+            if [ $? -ne 0 ]; then
+                die "Problem reading file: $file"
+            fi
+        else
+            ntime=`zipgrep CREATE $file | awk '{split($0,a, " "); print a[3]}'`
+            otime=`grep CREATE MANIFEST.txt | awk '{split($0,a, " "); print a[3]}'`
+            echo "Ntime $ntime Otime $otime"
+            if (( $ntime > $otime )); then
+                # newer file so unpack it
+                unzip -oq $file
+                if [ $? -ne 0 ]; then
+                    die "Problem reading file: $file"
+                fi
+            fi
+        fi
+    fi
 }
 
 
@@ -554,18 +563,12 @@ if [ -e "$file" ]; then
     folder=$appfolder/$filenoext"_"$app
     create_missingdir $folder
 
-    if [ -z $old ]; then
-        # unzip the executable in the folder and run it..
-        # We are unzipping the copying the files no matter what!
-        unzip -oq $file -d $folder
-        if [ $? -ne 0 ]; then
-            die "Problem reading file: $file"
-        fi
-    fi
-
+    #save handle to file
+    ifile=`pwd`/$file
     cd $folder
+    unpack $ifile  # We are already in $folder
 
-    resolvedocker $data
+    resolvedata $data
 
     if [ -e jamout.js ]; then
         # save the current program information for short cut use
@@ -576,40 +579,33 @@ if [ -e "$file" ]; then
         case $type in
             cloud)
                 iport=9883
-                create_lock_or_wait $folder $type
                 while [ : ]; do
                     portavailable $folder $iport
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
-                ( sleep 5; remove_lock $folder $type ) &
                 create_missingdir $folder/$iport
                 getappid $jamfolder $folder/$iport $app
                 dojamout $type $iport $folder
             ;;
             fog)
                 iport=5883
-                create_lock_or_wait $folder $type
                 while [ : ]; do
                     portavailable $folder $iport
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
-                ( sleep 5; remove_lock $folder $type ) &
                 create_missingdir $folder/$iport
                 getappid $jamfolder $folder/$iport $app
                 dojamout $type $iport $folder
             ;;
             device)
                 iport=1883
-                create_lock_or_wait $folder $type
                 while [ : ]; do
                     portavailable $folder $iport
                     [[ $porttaken == 1 ]] || break
                     ((iport++))
                 done
-                ( sleep 5; remove_lock $folder $type ) &
-
                 create_missingdir $folder/$iport
                 getappid $jamfolder $folder/$iport $app
                 dojamout_p1 $type $iport $folder
