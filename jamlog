@@ -13,7 +13,7 @@ show_usage() {
     cat << EOF
 Extracts the logs written by the C nodes and displays them in the terminal.
 
-Usage: jamlog [--program=pgm --app=app_name]
+Usage: jamlog [--program=pgm --app=app_name] [--msg]
 
 jamlog
 Extracts the logs from the last program that was run or is running.
@@ -22,6 +22,9 @@ jamlog --program=stringlog --app=q5
 Extracts the logs from the execution of stringlog under the application ID q5
 if logs from such a run exists.
 
+jamlog --msg
+Puts a message line in the log file to indicate that the log was displayed
+up to that point.
 
 EOF
 }
@@ -35,7 +38,7 @@ jamfolder=$HOME"/__jamruns"
 exit_missingdir $jamfolder "__jamruns folder missing. JAMScript tools not setup?"
 
 appsfolder=$jamfolder/apps
-exit_missingdir $appsfolder "__jamruns/apps folder missing. JAMScript tools not setup?"
+exit_missingdir $appsfolder "No logs to show!"
 
 cd $appsfolder
 
@@ -75,6 +78,10 @@ while :; do
         --program=)            # Handle the case of an empty
             die 'ERROR: "--program" requires a non-empty option argument.'
             ;;
+        -m|--msg)
+            msg=1
+            ;;
+
             *)               # Default case: No more options, so break out of the loop.
         break
     esac
@@ -92,4 +99,10 @@ echo $appsfolder/$program"_"$app
 
 if [ -e $appsfolder/$program"_"$app/log ]; then
     cat $appsfolder/$program"_"$app/log
+
+    if [ ! -z $msg ]; then
+        echo >> $appsfolder/$program"_"$app/log
+        echo "========================= >> log displayed >> " `date` >> $appsfolder/$program"_"$app/log
+        echo >> $appsfolder/$program"_"$app/log
+    fi
 fi
