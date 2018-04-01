@@ -382,7 +382,6 @@ unpack() {
         else
             ntime=`zipgrep CREATE $file | awk '{split($0,a, " "); print a[3]}'`
             otime=`grep CREATE MANIFEST.txt | awk '{split($0,a, " "); print a[3]}'`
-            echo "Ntime $ntime Otime $otime"
             if (( $ntime > $otime )); then
                 # newer file so unpack it
                 unzip -oq $file
