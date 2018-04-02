@@ -36,7 +36,7 @@ To start more than one C node at a device use the following command.
 djamrun program.jxe --num=4
 
 To provide a set of tags to the program, use the following command.
-jamrun program.jxe --tag="param1, param2"
+djamrun program.jxe --tags="param1, param2"
 
 Use the --bg option to run a command in the backgroud.
 
@@ -75,10 +75,10 @@ runatcloud() {
     else
         if [ -z $bg ]; then
             echo "-" > $thisappfolder/$dockid/tmuxid
-            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data --tag=$tags
+            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data --tags=$tags
         else
             echo $dockid > $thisappfolder/$dockid/tmuxid
-            tmux new-session -s $dockid -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data --tag=$tags
+            tmux new-session -s $dockid -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --cloud --data=$data --tags=$tags
         fi
     fi
 }
@@ -102,10 +102,10 @@ runatfog() {
     else
         if [ -z $bg ]; then
             echo "-" > $thisappfolder/$dockid/tmuxid
-            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data --tag=$tags
+            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data --tags=$tags
         else
             echo $dockid > $thisappfolder/$dockid/tmuxid
-            tmux new-session -s $dockid -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data --tag=$tags
+            tmux new-session -s $dockid -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --fog --data=$data --tags=$tags
         fi
     fi
 }
@@ -137,28 +137,28 @@ runatdevice() {
         else
             if [ -z $bg ]; then
                 echo "-" > $thisappfolder/$dockid/tmuxid
-                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c"
+                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tags=$tags --tmux="$dockid-c"
             else
                 echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
-                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c"
+                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tags=$tags --tmux="$dockid-c"
             fi
         fi
     else
         if [ -z $tags ]; then
             if [ -z $bg ]; then
                 echo "-" > $thisappfolder/$dockid/tmuxid
-                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c" --log=$log
+                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c" --log
             else
                 echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
-                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c" --log=$log
+                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c" --log
             fi
         else
             if [ -z $bg ]; then
                 echo "-" > $thisappfolder/$dockid/tmuxid
-                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c" --log=$log
+                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tags=$tags --tmux="$dockid-c" --log
             else
                 echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
-                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tag=$tags --tmux="$dockid-c" --log=$log
+                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockid jamrun $file --app=$appid --num=$num --data=$data --tags=$tags --tmux="$dockid-c" --log
             fi
         fi
     fi
