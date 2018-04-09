@@ -74,6 +74,11 @@ printnodeinfo() {
     else
         local tmuxid="-"
     fi
+    if [ -e $2/parentId ]; then
+        local parid=`cat $2/parentId`
+    else
+        local parid='-'
+    fi
 
     if [ $mtype == "device" ]; then
         local cdevs=0
@@ -84,9 +89,9 @@ printnodeinfo() {
                 ((cdevs++))
             fi
         done
-        printf "%8s %12s %12s %12s %15s %10s %7s %10s\n" "$appid" "$appl" "$prog" "Local:$port" "$dstore" "$mtype" "$cdevs" "$tmuxid"
+        printf "%6s %12s %12s %12s %12s %15s %10s %7s %10s\n" "$appid" "$appl" "$prog" "Local:$port" "$parid" "$dstore" "$mtype" "$cdevs" "$tmuxid"
     else
-        printf "%8s %12s %12s %12s %15s %10s %7s %10s\n" "$appid" "$appl" "$prog" "Local:$port" "$dstore" "$mtype" "--" "$tmuxid"
+        printf "%6s %12s %12s %12s %12s %15s %10s %7s %10s\n" "$appid" "$appl" "$prog" "Local:$port" "$parid" "$dstore" "$mtype" "--" "$tmuxid"
     fi
 }
 
@@ -106,6 +111,8 @@ printdockerinfo() {
     else
         local tmuxid_c="-"
     fi
+
+
     local dockerid=`cat $2/dockerId`
 
     tmux has-session -t $tmuxid 2>/dev/null
@@ -117,16 +124,16 @@ printdockerinfo() {
     if [ $mtype == "device" ]; then
 #        local cdevs=`docker exec $dockerid jamquery $appid cdevs`
         cdevs=`cat $2/cdevs`
-        printf "%8s %12s %12s %12s %15s %10s %7s %10s\n" "$appid" "$appl" "$prog" "$dockerid" "$dstore" "$mtype" "$cdevs" "$tmuxid,$tmuxid_c"
+        printf "%6s %12s %12s %12s %12s %15s %10s %7s %10s\n" "$appid" "$appl" "$prog" "$dockerid" "" "$dstore" "$mtype" "$cdevs" "$tmuxid,$tmuxid_c"
     else
-        printf "%8s %12s %12s %12s %15s %10s %7s %10s\n" "$appid" "$appl" "$prog" "$dockerid" "$dstore" "$mtype" "--" "$tmuxid"
+        printf "%6s %12s %12s %12s %12s %15s %10s %7s %10s\n" "$appid" "$appl" "$prog" "$dockerid" "" "$dstore" "$mtype" "--" "$tmuxid"
     fi
 }
 
 
 
 printheader() {
-    printf "\n%8s %12s %12s %12s %15s %10s %7s %10s\n" "ID" "NAME" "PROGRAM" "HOST" "D-STORE" "TYPE" "C-NODES" "TMUX-ID"
+    printf "\n%6s %12s %12s %12s %12s %15s %10s %7s %10s\n" "ID" "NAME" "PROGRAM" "HOST" "PARENT" "D-STORE" "TYPE" "C-NODES" "TMUX-ID"
 }
 
 app=

@@ -143,20 +143,14 @@ dojamout_p2_fg() {
     local pnum=$2
     local floc=$3
 
+    buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags"
+    local args=$results
     case $type in
         cloud)
-            if [ -z "$tags" ]; then
-                node jamout.js --app=$jappid --cloud --port=$pnum --data=$data
-            else
-                node jamout.js --app=$jappid --cloud --port=$pnum --data=$data --tags=$tags
-            fi
+            node jamout.js $args
             ;;
         fog)
-            if [ -z "$tags" ]; then
-                node jamout.js --app=$jappid --fog --port=$pnum --data=$data
-            else
-                node jamout.js --app=$jappid --fog --port=$pnum --data=$data --tags=$tags
-            fi
+            node jamout.js $args
             ;;
         device)
             check_jamhome
@@ -172,11 +166,7 @@ dojamout_p2_fg() {
                 fi
             ) &
             echo $! > $floc/$pnum/jviewshell
-            if [ -z "$tags" ]; then
-                node jamout.js --app=$jappid --port=$pnum --data=$data
-            else
-                node jamout.js --app=$jappid --port=$pnum --data=$data --tags=$tags
-            fi
+            node jamout.js $args
             vpid=`cat $floc/$pnum/jviewshell`
             local pid=`ps -o pid= -p $vpid`
             if [ ! -z $pid ]; then
@@ -192,35 +182,9 @@ dojamout_p2_bg() {
     local pnum=$2
     local floc=$3
 
-    case $type in
-        cloud)
-            if [ -z "$tags" ]; then
-                node jamout.js --app=$jappid --cloud --port=$pnum --data=$data &
-                jpid=$!
-            else
-                node jamout.js --app=$jappid --cloud --port=$pnum --data=$data --tags=$tags &
-                jpid=$!
-            fi
-            ;;
-        fog)
-            if [ -z "$tags" ]; then
-                node jamout.js --app=$jappid --fog --port=$pnum --data=$data &
-                jpid=$!
-            else
-                node jamout.js --app=$jappid --fog --port=$pnum --data=$data --tags=$tags &
-                jpid=$!
-            fi
-            ;;
-        device)
-            if [ -z "$tags" ]; then
-                node jamout.js --app=$jappid --port=$pnum --data=$data &
-                jpid=$!
-            else
-                node jamout.js --app=$jappid --port=$pnum --data=$data --tags=$tags &
-                jpid=$!
-            fi
-            ;;
-    esac
+    buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags"
+    node jamout.js $results &
+    jpid=$!
 }
 
 
@@ -236,25 +200,15 @@ doaout() {
     while [ $counter -le $num ]; do
         if [ -e a.out ]; then
             # execute the program.. we are in the folder..
+            buildcargs "-a=$jappid" "-p=$port" "-n=$counter" "-t=$tags"
+            local cargs=$results
             if [ -z $log ]; then
-                if [ -z "$tags" ]; then
-                    $TMUX new-session -s $tmuxapp-$counter -d  "./a.out -a $jappid -p $port -n $counter"
-                else
-                    $TMUX new-session -s $tmuxapp-$counter -d  "./a.out -a $jappid -p $port -t $tags -n $counter"
-                fi
+                $TMUX new-session -s $tmuxapp-$counter -d  "./a.out $cargs"
             else
-                if [ -z "$tags" ]; then
-                    if [ `uname` == "Linux" ]; then
-                        $TMUX new-session -s $tmuxapp-$counter -d  script -a -c "./a.out -a $jappid -p $port -n $counter" -f log
-                    else
-                        $TMUX new-session -s $tmuxapp-$counter -d  "script -a -t 1 log ./a.out -a $jappid -p $port -n $counter"
-                    fi
+                if [ `uname` == "Linux" ]; then
+                    $TMUX new-session -s $tmuxapp-$counter -d  script -a -c "./a.out $cargs" -f log
                 else
-                    if [ `uname` == "Linux" ]; then
-                        $TMUX new-session -s $tmuxapp-$counter -d  script -a -c "./a.out -a $jappid -p $port -t $tags -n $counter" -f log
-                    else
-                        $TMUX new-session -s $tmuxapp-$counter -d  "script -a -t 1 log ./a.out -a $jappid -p $port -t $tags -n $counter"
-                    fi
+                    $TMUX new-session -s $tmuxapp-$counter -d  "script -a -t 1 log ./a.out $cargs"
                 fi
             fi
         fi

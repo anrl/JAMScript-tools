@@ -229,3 +229,35 @@ check_set_check_prog() {
         fi
     fi
 }
+
+buildjargs() {
+    local str=
+    for x in $@; do
+        str+=" "
+        local xtail="${x##*=}"
+        local xhead="${x%=*}"
+
+        if [ ! -z $xtail ]; then
+            str+=$x
+        fi
+    done
+
+    str+="--$type"
+
+    results=$str
+}
+
+buildcargs() {
+    local str=
+    for x in $@; do
+        str+=" "
+        local xtail="${x##*=}"
+        local xhead="${x%=*}"
+
+        if [ ! -z $xtail ]; then
+            str+="$xhead $xtail"
+        fi
+    done
+
+    results=$str
+}
