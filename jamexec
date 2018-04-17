@@ -80,6 +80,8 @@ dojamout_p2_fg() {
 
     buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags" "--iflow=$iflow" "--oflow=$oflow"
     local args=$results
+    echo "------------" $args
+
     case $type in
         cloud)
             node jamout.js $args
