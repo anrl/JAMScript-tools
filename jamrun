@@ -71,6 +71,8 @@ Usage: jamrun file.jxe [--app=appl_name] [--fog|--cloud] [--num=num_c_devs]
                                     [--tags=quoted_list_of_tags]
                                     [--bg]
                                     [--old]
+                                    [--iflow=flow_name]
+                                    [--oflow=flow_name]
                                     [--log]
 
 
@@ -143,7 +145,7 @@ dojamout_p2_fg() {
     local pnum=$2
     local floc=$3
 
-    buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags"
+    buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags" "--iflow=$iflow" "--oflow=$oflow"
     local args=$results
     case $type in
         cloud)
@@ -182,7 +184,7 @@ dojamout_p2_bg() {
     local pnum=$2
     local floc=$3
 
-    buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags"
+    buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags" "--iflow=$iflow" "--oflow=$oflow"
     node jamout.js $results &
     jpid=$!
 }
@@ -363,6 +365,8 @@ old=
 porttaken=0
 tmuxid=
 log=
+iflow=
+oflow=
 
 file=$1
 shift
@@ -440,6 +444,34 @@ while :; do
             ;;
         --num=)            # Handle the case of an empty
             die 'ERROR: "--num" requires a non-empty option argument.'
+            ;;
+        -u|--oflow)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                oflow=$2
+                shift
+            else
+                die 'ERROR: "--oflow" requires a non-empty option argument.'
+            fi
+            ;;
+        --oflow=?*)
+            oflow=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            ;;
+        --oflow=)            # Handle the case of an empty
+            die 'ERROR: "--oflow" requires a non-empty option argument.'
+            ;;
+        -i|--iflow)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                iflow=$2
+                shift
+            else
+                die 'ERROR: "--iflow" requires a non-empty option argument.'
+            fi
+            ;;
+        --iflow=?*)
+            iflow=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            ;;
+        --iflow=)            # Handle the case of an empty
+            die 'ERROR: "--iflow" requires a non-empty option argument.'
             ;;
         -d|--data)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then

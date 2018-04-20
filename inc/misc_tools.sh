@@ -242,7 +242,7 @@ buildjargs() {
         fi
     done
 
-    str+="--$type"
+    str+=" --$type"
 
     results=$str
 }
