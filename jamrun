@@ -545,11 +545,12 @@ if [ -e "$file" ]; then
 
     # Get the folder
     filenoext="${file%.*}"
+    filenoext="${filenoext##*/}"
     folder=$appfolder/$filenoext"_"$app
     create_missingdir $folder
 
     #save handle to file
-    ifile=`pwd`/$file
+    ifile="$(cd "$(dirname "$file")"; pwd)/$(basename "$file")"
     cd $folder
     unpack $ifile  # We are already in $folder
 
