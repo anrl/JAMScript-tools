@@ -185,8 +185,15 @@ dojamout_p2_bg() {
     local floc=$3
 
     buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags" "--iflow=$iflow" "--oflow=$oflow"
-    node jamout.js $results &
-    jpid=$!
+    local args=$results
+
+    if [ `uname` == "Linux" ]; then
+        script -a -c node jamout.js $args -f log.j > /dev/null &
+    else
+
+        script -a -t 1 log.j node jamout.js $args > /dev/null &
+    fi
+    echo "Starting the J node..."    
 }
 
 
