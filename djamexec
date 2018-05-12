@@ -148,6 +148,10 @@ if [ "$(ls -A $appsfolder)" ]; then
 
     cd $appsfolder
 
+    if [ ! -d $tname ]; then
+        die "No folder $tname found."
+    fi
+
     for jruns in `ls $appsfolder/$tname`; do
         dir=$appsfolder/$tname/$jruns
         if [ -d $dir ]; then
