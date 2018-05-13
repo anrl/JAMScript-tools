@@ -30,7 +30,7 @@ checkprocess() {
         if [ $pid == "new" ]; then
             running="new"
         else
-            local present=`ps -p $pid | grep node | wc -l`
+            local present=`ps -p $pid | grep node | wc -l | tr -d [:space:]`
             if [ $present == "1" ]; then
                 running="ps"
             else
@@ -39,12 +39,18 @@ checkprocess() {
         fi
     elif [ -e $1/dockerId ]; then
         local didp=`cat $1/dockerId`
-        if [ -z $didp ]; then
+        local appid=`cat $1/appid`
+        if [ -z $didp ] || [ $didp == "-" ]; then
             running="none"
         else
-            local present=`docker ps --filter id=$didp | grep $didp | wc -l`
+            local present=`docker ps --filter id=$didp | grep $didp | wc -l | tr -d [:space:]`
             if [ $present == "1" ]; then
-                running="docker"
+                local present=`docker exec -it $didp jamlist | grep $appid | wc -l | tr -d [:space:]`
+                if [ $present == "1" ]; then
+                    running="docker"
+                else
+                    running="none"
+                fi
             else
                 running="none"
             fi
@@ -84,7 +90,7 @@ printnodeinfo() {
         local cdevs=0
         for pidf in `ls $2/cdevProcessId.*`; do
             local pid=`cat $pidf`
-            local pidok=`ps -p $pid | grep a.out | wc -l`
+            local pidok=`ps -p $pid | grep a.out | wc -l | tr -d [:space:]`
             if [ $pidok == 1 ]; then
                 ((cdevs++))
             fi

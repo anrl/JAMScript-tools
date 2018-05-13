@@ -40,7 +40,7 @@ checkdocker() {
 
     if [ -e $1/dockerId ]; then
         local didp=`cat $1/dockerId`
-        local present=`docker ps --filter id=$didp | grep $didp | wc -l`
+        local present=`docker ps --filter id=$didp | grep $didp | wc -l | tr -d '[:space:]'`
         if [ $present == "1" ]; then
             running="docker"
         else
@@ -52,7 +52,8 @@ checkdocker() {
 
 app=
 program=
-type=
+type=device
+xapp=
 
 while :; do
     case $1 in
@@ -73,6 +74,20 @@ while :; do
             ;;
         --app=)             # Handle the case of an empty
             die 'ERROR: "--app" requires a non-empty option argument.'
+            ;;
+        -x|--xapp)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                xapp=$2
+                shift
+            else
+                die 'ERROR: "--xapp" requires a non-empty option argument.'
+            fi
+            ;;
+        --xapp=?*)
+            xapp=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            ;;
+        --xapp=)             # Handle the case of an empty
+            die 'ERROR: "--xapp" requires a non-empty option argument.'
             ;;
         -p|--program)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
@@ -105,7 +120,7 @@ while :; do
         --)                 # End of all options.
             shift
             break
-        ;;
+            ;;
         -?*)
             printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
             ;;
@@ -140,12 +155,20 @@ if [ -z $app ]; then
     fi
 fi
 
+
 tname="${program%.*}"
 tname=$tname"_"$app
 fext="${file##*.}"
 
+xyapp=$xapp
+if [ ! -z $xapp ]; then
+    xapp="--app=$xapp"
+fi
+
+
 if [ "$(ls -A $appsfolder)" ]; then
 
+    olddir=`pwd`
     cd $appsfolder
 
     if [ ! -d $tname ]; then
@@ -161,30 +184,35 @@ if [ "$(ls -A $appsfolder)" ]; then
                 if [ -z $type ] || [ $type == $mtype ]; then
                     data=`cat $dir/dataStore`
                     runon=`cat $dir/dockerId`
-                    case $mtype in
-                        cloud)
-                            echo "Runon $runon, jrun $jruns"
-                            if [ $fext == "jxe" ]; then
-                                djamrun $file --app=$app --cloud --data=$data --runon=$runon
-                            else
-                                docker exec -it $runon $file $rest
-                            fi
-                        ;;
-                        fog)
-                            if [ $fext == "jxe" ]; then
-                                djamrun $file --app=$app --fog --data=$data --runon=$runon
-                            else
-                                docker exec -it $runon $file $rest
-                            fi
-                        ;;
-                        device)
-                            if [ $fext == "jxe" ]; then
-                                djamrun $file --app=$app  --data=$data --runon=$runon --num=`cat $dir/cdevs`
-                            else
-                                docker exec -it $runon $file $rest
-                            fi
-                        ;;
-                    esac
+                    present=`docker exec -it $runon jamlist | grep $xyapp | wc -l | tr -d [:space:]`
+                    if [ $present == "0" ]; then
+                        # go back to the old directory and run these command otherwise $file won't be found
+                        cd $olddir
+                        case $mtype in
+                            cloud)
+                                if [ $fext == "jxe" ]; then
+                                    djamrun $file "$xapp" --cloud --data=$data --runon=$runon --bg
+                                else
+                                    docker exec -it $runon $file $rest
+                                fi
+                            ;;
+                            fog)
+                                if [ $fext == "jxe" ]; then
+                                    djamrun $file "$xapp" --fog --data=$data --runon=$runon --bg
+                                else
+                                    docker exec -it $runon $file $rest
+                                fi
+                            ;;
+                            device)
+                                if [ $fext == "jxe" ]; then
+                                    djamrun $file "$xapp" --data=$data --runon=$runon --num=`cat $dir/cdevs` --bg
+                                else
+                                    docker exec -it $runon $file $rest
+                                fi
+                            ;;
+                        esac
+                        exit
+                    fi
                 fi
             fi
         fi

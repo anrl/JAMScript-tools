@@ -38,10 +38,10 @@ make_container() {
     create_missingdir $jamfolder/type/contname
 
     # Check if the build container is running..
-    present=`docker ps --filter name=$contname | grep $contname | wc -l`
+    present=`docker ps --filter name=$contname | grep $contname | wc -l | tr -d '[:space:]'`
     if [ $present == "0" ]; then
         # Otherwise check if an older run is there..
-        present=`docker ps -a --filter name=$contname | grep $contname | wc -l`
+        present=`docker ps -a --filter name=$contname | grep $contname | wc -l | tr -d '[:space:]'`
         if [ $present == "1" ]; then
             docker rm $contname
         fi

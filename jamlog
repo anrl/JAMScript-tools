@@ -45,6 +45,7 @@ exit_missingdir $appsfolder "No logs to show!"
 
 cd $appsfolder
 
+j=
 
 while :; do
     case $1 in

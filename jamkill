@@ -68,8 +68,13 @@ killprocess() {
         local didp=`cat $1/dockerId`
         local present=`docker ps --filter id=$didp | grep $didp | wc -l | tr -d [:space:]`
         if [ $present == "1" ]; then
-            docker kill $didp
-            docker rm $didp
+            docker exec -it $didp jamkill `cat $1/appid`
+            echo "-" > $1/dockerId
+            local count=`docker exec -it $didp jamlist | wc -l | tr -d [:space:]`
+            if (( $count <= 2 )); then
+                docker kill $didp
+                docker rm $didp
+            fi
         fi
     fi
 }
@@ -84,6 +89,7 @@ killjob() {
                 dir=$appsfolder/$jruns$jexs
                 if [ -d $dir ]; then
                     local appid=`cat $dir/appid`
+
                     if [ $appid == $jobid ]; then
                         echo "Killing application running at " $jexs
                         killprocess $dir
@@ -125,6 +131,8 @@ exit_missingdir $appsfolder "__jamruns/apps folder missing. JAMScript tools not 
 cd $appsfolder
 
 if [ -z $1 ]; then
+    # kill the job that is under the file 'appid'
+    # this is the job that was started last
     if [ -e appid ]; then
         appid=`cat appid`
         killjob $appid
