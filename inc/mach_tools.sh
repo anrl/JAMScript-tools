@@ -78,7 +78,7 @@ startzonemach() {
 
         echo "-------------------------- IP " 10.$subnet.$zonenum.$count "---- machname --- " $machname
         # Create the machine
-        dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN $dockerImage`
+        dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN --privileged $dockerImage`
         if [ $? != 0 ]; then
             present=0
             docker rm $machname
