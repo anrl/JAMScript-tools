@@ -142,6 +142,13 @@ fi
 
 check_prog pumba "Pumba not installed. Download it from https://github.com/gaia-adm/pumba/releases"
 
+pversion=`pumba -v | cut -d ' ' -f 3 | cut -d '.' -f 1,2`
+if (( $(echo "$pversion < 0.5" | bc -l) )); then
+    echo "Pumba version 0.5 or new is needed. Exiting."
+    exit
+fi
+
+
 # We are using pumba - validate parameters
 
 clddelay="${cldelay%:*}"
@@ -157,13 +164,13 @@ save "on" $jamfolder/pumba/status
 
 # Set delay between cloud and fogs
 # we are setting for 1 hour recurrent delay. There is one minute every 1hr where the delay is not in effect
-save "pumba --interval 1h netem --duration 59m delay -t $clddelay -j $cldjitter " $jamfolder/pumba/cloud_cmd
+save "pumba -l fatal --interval 1h netem --duration 59m delay -t $clddelay -j $cldjitter " $jamfolder/pumba/cloud_cmd
 
 # Set delay inside fog zones
-save "pumba --interval 1h netem --duration 59m delay -t $inpdelay -j $inpjitter " $jamfolder/pumba/infog_cmd
+save "pumba -l fatal  --interval 1h netem --duration 59m delay -t $inpdelay -j $inpjitter " $jamfolder/pumba/infog_cmd
 
 # Set delay between fog zones
-save "pumba --interval 1h netem --duration 59m delay -t $outpdelay -j $outpjitter " $jamfolder/pumba/outfog_cmd
+save "pumba -l fatal --interval 1h netem --duration 59m delay -t $outpdelay -j $outpjitter " $jamfolder/pumba/outfog_cmd
 
 # Write the number of num_of_zones
 create_missingdir $jamfolder/zones
