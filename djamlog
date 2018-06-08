@@ -117,7 +117,8 @@ if [ -e $appsfolder/$lprogram"_"$lapp ]; then
         dir=$appsfolder/$lprogram"_"$lapp/$jruns
         if [ -d $dir ]; then
             checkdocker $dir
-
+            echo "Running " $running
+            
             if [ $running == "docker" ]; then
                 runon=`cat $dir/dockerId`
                 if [ -z $app ] && [ -z $program ]; then
