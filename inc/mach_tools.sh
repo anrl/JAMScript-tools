@@ -76,7 +76,8 @@ startzonemach() {
             count=$(( $newcount + 1 ))
         fi
 
-        echo "-------------------------- IP " 10.$subnet.$zonenum.$count "---- machname --- " $machname
+        echo "Machine: " $machname " starting with IP: " 10.$subnet.$zonenum.$count
+
         # Create the machine
         dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN --privileged $dockerImage`
         if [ $? != 0 ]; then
