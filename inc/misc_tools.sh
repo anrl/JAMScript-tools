@@ -19,7 +19,6 @@ inc_counter() {
     local counter=$1
     local value
 
-    echo "Counter: " $counter
     if [ -e $counter ]; then
         value=`cat $counter`
         ((value++))
@@ -35,7 +34,6 @@ inc_counter_sync() {
     local counter=$1
     local value
 
-    echo "Counter: " $counter
     if [ -e $counter ]; then
         value=`cat $counter`
         ((value++))
