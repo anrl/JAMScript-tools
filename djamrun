@@ -46,6 +46,8 @@ Usage: djamrun file.jxe [--app=appl_name] [--fog|--cloud] [--num=num_c_devs]
                                     [--bg]
                                     [--runon=container_to_run]
                                     [--log]
+                                    [--loc]
+                                    [--link=random|near|best]
 
 
 The djamrun command creates a run state in the $HOME/__jamrun folder.
@@ -62,25 +64,25 @@ runatcloud() {
     local data=$4
     local tags=$5
 
-
-    if [ -z $tags ]; then
-        if [ -z $bg ]; then
-            echo "-" > $thisappfolder/$dockid/tmuxid
-            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --cloud --data=$data
-        else
-
-            echo $dockid > $thisappfolder/$dockid/tmuxid
-            tmux new-session -s $dockid -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --cloud --data=$data
-        fi
-    else
-        if [ -z $bg ]; then
-            echo "-" > $thisappfolder/$dockid/tmuxid
-            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --cloud --data=$data --tags=$tags
-        else
-            echo $dockid > $thisappfolder/$dockid/tmuxid
-            tmux new-session -s $dockid -d docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --cloud --data=$data --tags=$tags
-        fi
+    local args=()
+    args+=('--app=$appid')
+    args+=('--data=$data')
+    args+=('--tags=$tags')
+    args+=('--link=$link')
+    args+=('--loc=$loc')
+    if [ ! -z $log ]; then
+        args+=('--log')
     fi
+
+    buildjargs ${args[@]}
+    if [ -z $bg ]; then
+        echo "-" > $thisappfolder/$dockid/tmuxid
+        docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+    else
+        echo $dockid > $thisappfolder/$dockid/tmuxid
+        tmux new-session -s $dockid -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+    fi
+
 }
 
 # runatfog $dockid $file $jappid $data $tags
@@ -91,23 +93,26 @@ runatfog() {
     local data=$4
     local tags=$5
 
-    if [ -z $tags ]; then
-        if [ -z $bg ]; then
-            echo "-" > $thisappfolder/$dockid/tmuxid
-            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --fog --data=$data
-        else
-            echo $dockid > $thisappfolder/$dockid/tmuxid
-            tmux new-session -s $dockid -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --fog --data=$data
-        fi
-    else
-        if [ -z $bg ]; then
-            echo "-" > $thisappfolder/$dockid/tmuxid
-            docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --fog --data=$data --tags=$tags
-        else
-            echo $dockid > $thisappfolder/$dockid/tmuxid
-            tmux new-session -s $dockid -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --fog --data=$data --tags=$tags
-        fi
+
+    local args=()
+    args+=('--app=$appid')
+    args+=('--data=$data')
+    args+=('--tags=$tags')
+    args+=('--link=$link')
+    args+=('--loc=$loc')
+    if [ ! -z $log ]; then
+        args+=('--log')
     fi
+
+    buildjargs ${args[@]}
+    if [ -z $bg ]; then
+        echo "-" > $thisappfolder/$dockid/tmuxid
+        docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+    else
+        echo $dockid > $thisappfolder/$dockid/tmuxid
+        tmux new-session -s $dockid -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+    fi
+
 }
 
 # runatdevice $dockid $file $jappid $data $num $tags
@@ -125,43 +130,28 @@ runatdevice() {
     # save for short cut use
     echo "$dockid-c" > $appfolder/tmuxid
 
-    if [ -z $log ]; then
-        if [ -z $tags ]; then
-            if [ -z $bg ]; then
-                echo "-" > $thisappfolder/$dockid/tmuxid
-                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c"
-            else
-                echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
-                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c"
-            fi
-        else
-            if [ -z $bg ]; then
-                echo "-" > $thisappfolder/$dockid/tmuxid
-                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --num=$num --data=$data --tags=$tags --tmux="$dockid-c"
-            else
-                echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
-                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --num=$num --data=$data --tags=$tags --tmux="$dockid-c"
-            fi
-        fi
-    else
-        if [ -z $tags ]; then
-            if [ -z $bg ]; then
-                echo "-" > $thisappfolder/$dockid/tmuxid
-                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c" --log
-            else
-                echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
-                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --num=$num --data=$data --tmux="$dockid-c" --log
-            fi
-        else
-            if [ -z $bg ]; then
-                echo "-" > $thisappfolder/$dockid/tmuxid
-                docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --num=$num --data=$data --tags=$tags --tmux="$dockid-c" --log
-            else
-                echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
-                tmux new-session -s $dockid"-j" -d  docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file --app=$appid --num=$num --data=$data --tags=$tags --tmux="$dockid-c" --log
-            fi
-        fi
+    local args=()
+    args+=('--app=$appid')
+    args+=('--data=$data')
+    args+=('--num=$num')
+    args+=('--tmux=$dockid-c')
+    args+=('--tags=$tags')
+    args+=('--link=$link')
+    args+=('--loc=$loc')
+    if [ ! -z $log ]; then
+        args+=('--log')
     fi
+
+    buildjargs ${args[@]}
+    echo "Results " $results
+    if [ -z $bg ]; then
+        echo "-" > $thisappfolder/$dockid/tmuxid
+        docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+    else
+        echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
+        tmux new-session -s $dockid"-j" -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+    fi
+    echo ">>> Device started in container $dockid"
 }
 
 
@@ -333,6 +323,8 @@ num=1
 bg=
 log=
 runon=
+link=
+loc=
 
 
 file=$1
@@ -351,11 +343,11 @@ fi
 
 while :; do
     case $1 in
-        -h|-\?|--help)
+        --help)
             show_usage      # Display a usage synopsis.
             exit
             ;;
-        -a|--app)           # Takes an option argument; ensure it has been specified.
+        --app)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 app=$2
                 shift
@@ -369,7 +361,7 @@ while :; do
         --app=)            # Handle the case of an empty
             die 'ERROR: "--app" requires a non-empty option argument.'
             ;;
-        -o|--runon)           # Takes an option argument; ensure it has been specified.
+        --runon)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 runon=$2
                 shift
@@ -383,7 +375,7 @@ while :; do
         --runon=)            # Handle the case of an empty
             die 'ERROR: "--runon" requires a non-empty option argument.'
             ;;
-        -t|--tags)           # Takes an option argument; ensure it has been specified.
+        --tags)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 tags=$2
                 shift
@@ -397,7 +389,7 @@ while :; do
         --tags=)            # Handle the case of an empty
             die 'ERROR: "--tags" requires a non-empty option argument.'
             ;;
-        -n|--num)           # Takes an option argument; ensure it has been specified.
+        --num)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 num=$2
                 shift
@@ -411,7 +403,7 @@ while :; do
         --num=)            # Handle the case of an empty
             die 'ERROR: "--num" requires a non-empty option argument.'
             ;;
-        -d|--data)           # Takes an option argument; ensure it has been specified.
+        --data)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 data=$2
                 shift
@@ -425,7 +417,35 @@ while :; do
         --data=)            # Handle the case of an empty
             die 'ERROR: "--data" requires a non-empty option argument.'
             ;;
-        -f|--fog)
+        --loc)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                loc=$2
+                shift
+            else
+                die 'ERROR: "--loc" requires longitude and lattitude specification'
+            fi
+            ;;
+        --loc=?*)
+            loc=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            ;;
+        --loc=)            # Handle the case of an empty
+            die 'ERROR: "--loc" requires longitude and lattitude specification'
+            ;;
+        --link)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                link=$2
+                shift
+            else
+                die 'ERROR: "--link" requires a non-empty option argument.'
+            fi
+            ;;
+        --link=?*)
+            link=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            ;;
+        --link=)            # Handle the case of an empty
+            die 'ERROR: "--link" requires a non-empty option argument.'
+            ;;
+        --fog)
             if [ "$type" != "device" ]; then
                 die 'ERROR: "type" cannot be reassigned.'
             else
@@ -433,7 +453,7 @@ while :; do
                 num=
             fi
             ;;
-        -c|--cloud)
+        --cloud)
             if [ "$type" != "device" ]; then
                 die 'ERROR: "type" cannot be reassigned.'
             else
@@ -441,10 +461,10 @@ while :; do
                 num=
             fi
             ;;
-        -b|--bg)
+        --bg)
             bg=1
             ;;
-        -l|--log)
+        --log)
             log=1
             ;;
         --)              # End of all options.

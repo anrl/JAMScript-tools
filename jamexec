@@ -80,7 +80,6 @@ dojamout_p2_fg() {
 
     buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags" "--iflow=$iflow" "--oflow=$oflow"
     local args=$results
-    echo "------------" $args
 
     case $type in
         cloud)
@@ -111,6 +110,7 @@ dojamout_p2_fg() {
             fi
             ;;
     esac
+    echo ">>> Started the J node at port $pnum"
 }
 
 

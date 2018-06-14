@@ -74,6 +74,8 @@ Usage: jamrun file.jxe [--app=appl_name] [--fog|--cloud] [--num=num_c_devs]
                                     [--iflow=flow_name]
                                     [--oflow=flow_name]
                                     [--log]
+                                    [--loc=long,lat]
+                                    [--link=random|near|best]
 
 
 The jamrun command creates a run state in the $HOME/__jamrun folder.
@@ -145,7 +147,7 @@ dojamout_p2_fg() {
     local pnum=$2
     local floc=$3
 
-    buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags" "--iflow=$iflow" "--oflow=$oflow"
+    buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags" "--iflow=$iflow" "--oflow=$oflow" "--link=$link" "--long=$long" "--lat=$lat"
     local args=$results
     case $type in
         cloud)
@@ -184,7 +186,7 @@ dojamout_p2_bg() {
     local pnum=$2
     local floc=$3
 
-    buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags" "--iflow=$iflow" "--oflow=$oflow"
+    buildjargs "--app=$jappid" "--port=$pnum" "--data=$data" "--tags=$tags" "--iflow=$iflow" "--oflow=$oflow" "--link=$link" "--long=$long" "--lat=$lat"
     local args=$results
 
     if [ `uname` == "Linux" ]; then
@@ -192,7 +194,8 @@ dojamout_p2_bg() {
     else
         script -a -t 1 log.j node jamout.js $args > /dev/null &
     fi
-    echo "Starting the J node..."
+    
+    echo ">>> Started the J node in background"
 }
 
 
@@ -221,7 +224,9 @@ doaout() {
             fi
         fi
         ((counter++))
+        echo ">>> Started a C node"
     done
+
 }
 
 # This is always scanning for a command with 'node'
@@ -294,7 +299,7 @@ cleanuptmux() {
 startredis() {
 
     # Start redis with no protected-mode and at the port
-    echo -e "port $1\nprotected-mode no" | redis-server - &
+    echo -e "port $1\nprotected-mode no" | redis-server - 1> /dev/null &
 }
 
 waitforredis() {
@@ -307,6 +312,7 @@ waitforredis() {
         fi
         sleep 1
     done
+    echo ">>> Redis running at port: $port"
 }
 
 
@@ -355,6 +361,24 @@ unpack() {
     fi
 }
 
+# set the global longitude and lattitude variables
+#
+getlonglat() {
+    local loc=$1
+
+    long="${loc%,*}"
+    latt="${loc##*,}"
+}
+
+# for now, just roam the north-eastern part...
+generatelonglat() {
+    a=$(( $RANDOM % 180 ))
+    b=$(( $RANDOM % 10000 ))
+    long=$a.$b
+    c=$(( $RANDOM % 90 ))
+    d=$(( $RANDOM % 10000 ))
+    lat=$c.$d
+}
 
 ###
 # Main script execution begins here...
@@ -373,6 +397,11 @@ tmuxid=
 log=
 iflow=
 oflow=
+link=random
+
+# generate the random longitude and lattitude values
+# use the --loc option to override these values
+generatelonglat
 
 file=$1
 shift
@@ -390,11 +419,11 @@ fi
 
 while :; do
     case $1 in
-        -h|-\?|--help)
+        --help)
             show_usage      # Display a usage synopsis.
             exit
             ;;
-        -a|--app)           # Takes an option argument; ensure it has been specified.
+        --app)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 app=$2
                 shift
@@ -409,7 +438,7 @@ while :; do
             die 'ERROR: "--args" requires a non-empty option argument.'
             ;;
 
-        -t|--tags)           # Takes an option argument; ensure it has been specified.
+        --tags)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 tags=$2
                 shift
@@ -423,7 +452,7 @@ while :; do
         --tags=)            # Handle the case of an empty
             die 'ERROR: "--tags" requires a non-empty option argument.'
             ;;
-        -m|--tmux)           # Takes an option argument; ensure it has been specified.
+        --tmux)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 tmuxid=$2
                 shift
@@ -437,7 +466,7 @@ while :; do
         --tmux=)            # Handle the case of an empty
             die 'ERROR: "--tmux" requires a non-empty option argument.'
             ;;
-        -n|--num)           # Takes an option argument; ensure it has been specified.
+        --num)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 num=$2
                 shift
@@ -451,7 +480,7 @@ while :; do
         --num=)            # Handle the case of an empty
             die 'ERROR: "--num" requires a non-empty option argument.'
             ;;
-        -u|--oflow)           # Takes an option argument; ensure it has been specified.
+        --oflow)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 oflow=$2
                 shift
@@ -465,7 +494,24 @@ while :; do
         --oflow=)            # Handle the case of an empty
             die 'ERROR: "--oflow" requires a non-empty option argument.'
             ;;
-        -i|--iflow)           # Takes an option argument; ensure it has been specified.
+        --loc)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                getlong $2
+                getlat $2
+                shift
+            else
+                die 'ERROR: "--loc" requires longitude and lattitude specification'
+            fi
+            ;;
+        --loc=?*)
+            loc=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            getlong $loc
+            getlat $loc
+            ;;
+        --loc=)            # Handle the case of an empty
+            die 'ERROR: "--loc" requires longitude and lattitude specification'
+            ;;
+        --iflow)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 iflow=$2
                 shift
@@ -479,7 +525,21 @@ while :; do
         --iflow=)            # Handle the case of an empty
             die 'ERROR: "--iflow" requires a non-empty option argument.'
             ;;
-        -d|--data)           # Takes an option argument; ensure it has been specified.
+        --link)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                link=$2
+                shift
+            else
+                die 'ERROR: "--link" requires a non-empty option argument.'
+            fi
+            ;;
+        --link=?*)
+            link=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            ;;
+        --link=)            # Handle the case of an empty
+            die 'ERROR: "--link" requires a non-empty option argument.'
+            ;;
+        --data)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
                 data=$2
                 shift
@@ -493,7 +553,7 @@ while :; do
         --data=)            # Handle the case of an empty
             die 'ERROR: "--data" requires a non-empty option argument.'
             ;;
-        -f|--fog)
+        --fog)
             if [ "$type" != "device" ]; then
                 die 'ERROR: "type" cannot be reassigned.'
             else
@@ -501,7 +561,7 @@ while :; do
                 num=
             fi
             ;;
-        -c|--cloud)
+        --cloud)
             if [ "$type" != "device" ]; then
                 die 'ERROR: "type" cannot be reassigned.'
             else
@@ -509,13 +569,13 @@ while :; do
                 num=
             fi
             ;;
-        -b|--bg)
+        --bg)
             bg=1
             ;;
-        -l|--log)
+        --log)
             log=1
             ;;
-        -o|--old)
+        --old)
             old=1
             ;;
         --)              # End of all options.
