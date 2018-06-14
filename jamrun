@@ -194,7 +194,7 @@ dojamout_p2_bg() {
     else
         script -a -t 1 log.j node jamout.js $args > /dev/null &
     fi
-    
+
     echo ">>> Started the J node in background"
 }
 
@@ -496,8 +496,7 @@ while :; do
             ;;
         --loc)           # Takes an option argument; ensure it has been specified.
             if [ "$2" ]; then
-                getlong $2
-                getlat $2
+                getlonglat $2
                 shift
             else
                 die 'ERROR: "--loc" requires longitude and lattitude specification'
@@ -505,8 +504,7 @@ while :; do
             ;;
         --loc=?*)
             loc=${1#*=}     # Delete everything up to "=" and assign the remainder.
-            getlong $loc
-            getlat $loc
+            getlonglat $loc
             ;;
         --loc=)            # Handle the case of an empty
             die 'ERROR: "--loc" requires longitude and lattitude specification'
