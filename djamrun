@@ -64,17 +64,14 @@ runatcloud() {
     local data=$4
     local tags=$5
 
-    local args=()
-    args+=('--app=$appid')
-    args+=('--data=$data')
-    args+=('--tags=$tags')
-    args+=('--link=$link')
-    args+=('--loc=$loc')
+
+    argstr=" --app=$appid --data=$data --num=$num --tmux=$dockid-c --tags=$tags --link=$link --loc=$loc "
     if [ ! -z $log ]; then
-        args+=('--log')
+        argstr="$argstr --log"
     fi
 
-    buildjargs ${args[@]}
+    buildjargs $argstr
+
     if [ -z $bg ]; then
         echo "-" > $thisappfolder/$dockid/tmuxid
         docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
@@ -93,18 +90,13 @@ runatfog() {
     local data=$4
     local tags=$5
 
-
-    local args=()
-    args+=('--app=$appid')
-    args+=('--data=$data')
-    args+=('--tags=$tags')
-    args+=('--link=$link')
-    args+=('--loc=$loc')
+    argstr=" --app=$appid --data=$data --num=$num --tmux=$dockid-c --tags=$tags --link=$link --loc=$loc "
     if [ ! -z $log ]; then
-        args+=('--log')
+        argstr="$argstr --log"
     fi
 
-    buildjargs ${args[@]}
+    buildjargs $argstr
+
     if [ -z $bg ]; then
         echo "-" > $thisappfolder/$dockid/tmuxid
         docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
@@ -130,20 +122,12 @@ runatdevice() {
     # save for short cut use
     echo "$dockid-c" > $appfolder/tmuxid
 
-    local args=()
-    args+=('--app=$appid')
-    args+=('--data=$data')
-    args+=('--num=$num')
-    args+=('--tmux=$dockid-c')
-    args+=('--tags=$tags')
-    args+=('--link=$link')
-    args+=('--loc=$loc')
+    argstr=" --app=$appid --data=$data --num=$num --tmux=$dockid-c --tags=$tags --link=$link --loc=$loc "
     if [ ! -z $log ]; then
-        args+=('--log')
+        argstr="$argstr --log"
     fi
 
-    buildjargs ${args[@]}
-    echo "Results " $results
+    buildjargs $argstr
     if [ -z $bg ]; then
         echo "-" > $thisappfolder/$dockid/tmuxid
         docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
