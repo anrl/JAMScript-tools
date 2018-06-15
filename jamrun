@@ -367,7 +367,7 @@ getlonglat() {
     local loc=$1
 
     long="${loc%,*}"
-    latt="${loc##*,}"
+    lat="${loc##*,}"
 }
 
 # for now, just roam the north-eastern part...
