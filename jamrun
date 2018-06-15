@@ -567,6 +567,8 @@ while :; do
                 num=
             fi
             ;;
+        --device)
+            ;;
         --bg)
             bg=1
             ;;
