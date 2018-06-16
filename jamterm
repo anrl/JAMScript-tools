@@ -42,7 +42,7 @@ localtmux() {
     local tmuxapp=$1
     local termno=$2
 
-    $TMUX has-session -t $tmuxapp 2>/dev/null
+    $TMUX has-session -t $tmuxapp-$termno 2>/dev/null
     res=$?
     if [ $res == "0" ]; then
         if [ -z $termno ]; then

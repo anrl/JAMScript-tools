@@ -287,9 +287,17 @@ getappid() {
 }
 
 
+killtmux() {
+
+    for q in `tmux ls | grep $1 | cut -d ':' -f 1`; do
+        tmux kill-session -t $q
+    done
+}
+
+
 cleanuptmux() {
     if [ ! -z $tmuxapp ]; then
-        $TMUX kill-session -t $tmuxapp
+        killtmux $tmuxapp
     fi
     exit
 }

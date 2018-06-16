@@ -38,14 +38,12 @@ kills all running instances that were started under app-id
 EOF
 }
 
-killtmux() {
-    local tmid=$1
 
-    tmux has-session -t $tmid 2>/dev/null
-    local res=$?
-    if [ $res == "0" ]; then
-        tmux kill-session -t $tmid
-    fi
+killtmux() {
+
+    for q in `tmux ls | grep $1 | cut -d ':' -f 1`; do
+        tmux kill-session -t $q
+    done
 }
 
 killprocess() {
