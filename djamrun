@@ -77,7 +77,7 @@ runatcloud() {
         docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
     else
         echo $dockid > $thisappfolder/$dockid/tmuxid
-        tmux new-session -s $dockid -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+        tmux new-session -s $dockid"-j" -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
     fi
 
 }
@@ -102,7 +102,7 @@ runatfog() {
         docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
     else
         echo $dockid > $thisappfolder/$dockid/tmuxid
-        tmux new-session -s $dockid -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+        tmux new-session -s $dockid"-j" -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
     fi
 
 }

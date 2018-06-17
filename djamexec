@@ -184,8 +184,8 @@ if [ "$(ls -A $appsfolder)" ]; then
                 if [ -z $type ] || [ $type == $mtype ]; then
                     data=`cat $dir/dataStore`
                     runon=`cat $dir/dockerId`
-                    present=`docker exec -it $runon jamlist | grep $xyapp | wc -l | tr -d [:space:]`
-                    if [ $present == "0" ]; then
+                    present=`docker exec -it $runon jamlist |  wc -l | tr -d [:space:]`
+                    if [ $present != "0" ]; then
                         # go back to the old directory and run these command otherwise $file won't be found
                         cd $olddir
                         case $mtype in
@@ -211,7 +211,6 @@ if [ "$(ls -A $appsfolder)" ]; then
                                 fi
                             ;;
                         esac
-                        exit
                     fi
                 fi
             fi
