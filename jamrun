@@ -211,7 +211,7 @@ doaout() {
     while [ $counter -le $num ]; do
         if [ -e a.out ]; then
             # execute the program.. we are in the folder..
-            buildcargs "-a=$jappid" "-p=$port" "-n=$counter" "-t=$tags"
+            buildcargs "-a=$jappid" "-p=$port" "-n=$counter" "-t=$tags" "-h=$height"
             local cargs=$results
             if [ -z $log ]; then
                 $TMUX new-session -s $tmuxapp-$counter -d  "./a.out $cargs"
@@ -356,7 +356,9 @@ unpack() {
                 die "Problem reading file: $file"
             fi
         else
+            # get new time - by just peaking into the ZIP file
             ntime=`zipgrep CREATE $file | awk '{split($0,a, " "); print a[3]}'`
+            # get the old one by reading the previous MANIFEST.txt
             otime=`grep CREATE MANIFEST.txt | awk '{split($0,a, " "); print a[3]}'`
             if (( $ntime > $otime )); then
                 # newer file so unpack it
@@ -367,6 +369,10 @@ unpack() {
             fi
         fi
     fi
+}
+
+getheight() {
+    height=`grep MAX-HEIGHT MANIFEST.txt | awk '{split($0,a, " "); print a[3]}'`
 }
 
 # set the global longitude and lattitude variables
@@ -627,6 +633,8 @@ if [ -e "$file" ]; then
     ifile="$(cd "$(dirname "$file")"; pwd)/$(basename "$file")"
     cd $folder
     unpack $ifile  # We are already in $folder
+    # find the machine height
+    getheight
 
     resolvedata $data
 
