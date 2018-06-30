@@ -190,7 +190,7 @@ dojamout_p2_bg() {
     local args=$results
 
     if [ `uname` == "Linux" ]; then
-        script -a -c node jamout.js $args -f log.j > /dev/null &
+        script -a -c "node jamout.js $args" -f log.j > /dev/null &
     else
         script -a -t 1 log.j node jamout.js $args > /dev/null &
     fi
