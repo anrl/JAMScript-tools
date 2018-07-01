@@ -66,7 +66,7 @@ killprocess() {
         fi
 
         if [ `uname` == "Linux" ]; then
-            local spid=`ps ax | grep node | grep $2 | cut -d ' ' -f 2,3 | tr -d [:space:]`
+            local spid=`ps ax | grep node | grep $2 | cut -d ' ' -f 2 | tr -d [:space:]`
             if [ ! -z $spid ]; then
                 kill -9 $spid
             fi
@@ -119,7 +119,7 @@ killalljobs() {
                 dir=$appsfolder/$jruns$jexs
                 if [ -d $dir ]; then
                     echo "Killing application running at " $jexs
-                    killprocess $dir
+                    killprocess $dir $jexs
                     if [ -e $dir/tmuxid ]; then
                         killtmux `cat $dir/tmuxid`
                     fi
