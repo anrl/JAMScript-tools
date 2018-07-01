@@ -48,6 +48,7 @@ Usage: djamrun file.jxe [--app=appl_name] [--fog|--cloud] [--num=num_c_devs]
                                     [--log]
                                     [--loc]
                                     [--link=random|near|best]
+                                    [--publish=dport:hport]
 
 
 The djamrun command creates a run state in the $HOME/__jamrun folder.
@@ -298,6 +299,16 @@ processjxe() {
     result="ok"
 }
 
+
+getportinfo() {
+    local pinfo=$1
+
+    dport="${pinfo%:*}"
+    hport="${pinfo##*:}"
+}
+
+
+
 # Initialize all the option variables.
 app=app-n
 type=device
@@ -309,7 +320,8 @@ log=
 runon=
 link=
 loc=
-
+dport=
+hport=
 
 file=$1
 shift
@@ -428,6 +440,21 @@ while :; do
             ;;
         --link=)            # Handle the case of an empty
             die 'ERROR: "--link" requires a non-empty option argument.'
+            ;;
+        --publish)           # Takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                getportinfo $2
+                shift
+            else
+                die 'ERROR: "--publish" requires docker and port information'
+            fi
+            ;;
+        --publish=?*)
+            publish=${1#*=}     # Delete everything up to "=" and assign the remainder.
+            getlonglat $publish
+            ;;
+        --publish=)            # Handle the case of an empty
+            die 'ERROR: "--publish" requires docker and port information'
             ;;
         --fog)
             if [ "$type" != "device" ]; then

@@ -65,6 +65,9 @@ startzonemach() {
     local netname=$3
     local subnet=$4
 
+    local dport=$5
+    local hport=$6
+
     local present
 
     create_missingdir $jamfolder/zones/$zonenum
@@ -79,7 +82,11 @@ startzonemach() {
         echo "Machine: " $machname " starting with IP: " 10.$subnet.$zonenum.$count
 
         # Create the machine
-        dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN --privileged $dockerImage`
+        if [ -z $dport ] && [ -z $hport ]; then
+            dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN --privileged $dockerImage`
+        else
+            dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN --privileged $dockerImage` --publish=0.0.0.0:$hport:$dport
+        fi
         if [ $? != 0 ]; then
             present=0
             docker rm $machname
@@ -103,6 +110,8 @@ startglobalmach() {
     local machname=$1
     local netname=$2
     local subnet=$3
+    local dport=$4
+    local hport=$5
 
     local present
 
@@ -118,7 +127,11 @@ startglobalmach() {
         fi
 
         # Create the machine
-        dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage`
+        if [ -z $dport ] && [ -z $hport ]; then
+            dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage`
+        else
+            dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage` --publish=0.0.0.0:$hport:$dport
+        fi
         if [ $? != 0 ]; then
             present=0
             docker rm $machname
