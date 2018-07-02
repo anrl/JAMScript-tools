@@ -198,7 +198,6 @@ if [ "$(ls -A $appsfolder)" ]; then
                 dir=$appsfolder/$jruns$jexs
                 if [ -d $dir ]; then
                     checkprocess $dir
-                    echo "Running... " $running
                     if [ $running == "ps" ] || [ $running == "new" ]; then
                         printnodeinfo $jexs $dir
                     elif [ $running == "docker" ]; then
