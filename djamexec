@@ -177,6 +177,7 @@ if [ "$(ls -A $appsfolder)" ]; then
 
     for jruns in `ls $appsfolder/$tname`; do
         dir=$appsfolder/$tname/$jruns
+        echo "Directory: " $dir
         if [ -d $dir ]; then
             checkdocker $dir
             if [ $running == "docker" ]; then

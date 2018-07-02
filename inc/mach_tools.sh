@@ -83,9 +83,17 @@ startzonemach() {
 
         # Create the machine
         if [ -z $dport ] && [ -z $hport ]; then
-            dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN --privileged $dockerImage`
+            if [ -z $mount ]; then
+                dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN --privileged -v $HOME/node_modules:/node_modules $dockerImage`
+            else
+                dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN --privileged -v $HOME/node_modules:/node_modules -v $JAMDATA:/data $dockerImage`
+            fi
         else
-            dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN --privileged $dockerImage` --publish=0.0.0.0:$hport:$dport
+            if [ -z $mount ]; then
+                dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN --privileged --publish=0.0.0.0:$hport:$dport -v $HOME/node_modules:/node_modules $dockerImage`
+            else
+                dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.$zonenum.$count --cap-add=NET_ADMIN --privileged --publish=0.0.0.0:$hport:$dport -v $HOME/node_modules:/node_modules -v $JAMDATA:/data $dockerImage`
+            fi
         fi
         if [ $? != 0 ]; then
             present=0
@@ -128,9 +136,17 @@ startglobalmach() {
 
         # Create the machine
         if [ -z $dport ] && [ -z $hport ]; then
-            dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage`
+            if [ -z $mount ]; then
+                dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count --cap-add=NET_ADMIN --privileged -v $HOME/node_modules:/node_modules  $dockerImage`
+            else
+                dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count --cap-add=NET_ADMIN --privileged -v $HOME/node_modules:/node_modules -v $JAMDATA:/data  $dockerImage`
+            fi
         else
-            dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count $dockerImage` --publish=0.0.0.0:$hport:$dport
+            if [ -z $mount ]; then
+                dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count --cap-add=NET_ADMIN --privileged --publish=0.0.0.0:$hport:$dport -v $HOME/node_modules:/node_modules $dockerImage`
+            else
+                dockerSer=`docker run -it -d --name $machname --network=$netname --ip=10.$subnet.0.$count --cap-add=NET_ADMIN --privileged --publish=0.0.0.0:$hport:$dport -v $HOME/node_modules:/node_modules -v $JAMDATA:/data $dockerImage`
+            fi
         fi
         if [ $? != 0 ]; then
             present=0

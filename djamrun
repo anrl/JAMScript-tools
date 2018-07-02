@@ -75,10 +75,10 @@ runatcloud() {
 
     if [ -z $bg ]; then
         echo "-" > $thisappfolder/$dockid/tmuxid
-        docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+        docker exec -it --env NODE_PATH=/usr/local/lib/node_modules:/node_modules $dockerSer jamrun $file $results
     else
         echo $dockid > $thisappfolder/$dockid/tmuxid
-        tmux new-session -s $dockid"-j" -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+        tmux new-session -s $dockid"-j" -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules:/node_modules $dockerSer jamrun $file $results
     fi
 
 }
@@ -100,10 +100,10 @@ runatfog() {
 
     if [ -z $bg ]; then
         echo "-" > $thisappfolder/$dockid/tmuxid
-        docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+        docker exec -it --env NODE_PATH=/usr/local/lib/node_modules:/node_modules $dockerSer jamrun $file $results
     else
         echo $dockid > $thisappfolder/$dockid/tmuxid
-        tmux new-session -s $dockid"-j" -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+        tmux new-session -s $dockid"-j" -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules:/node_modules $dockerSer jamrun $file $results
     fi
 
 }
@@ -131,10 +131,10 @@ runatdevice() {
     buildjargs $argstr
     if [ -z $bg ]; then
         echo "-" > $thisappfolder/$dockid/tmuxid
-        docker exec -it --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+        docker exec -it --env NODE_PATH=/usr/local/lib/node_modules:/node_modules $dockerSer jamrun $file $results
     else
         echo $dockid"-j" > $thisappfolder/$dockid/tmuxid
-        tmux new-session -s $dockid"-j" -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules $dockerSer jamrun $file $results
+        tmux new-session -s $dockid"-j" -d docker exec -it  --env NODE_PATH=/usr/local/lib/node_modules:/node_modules $dockerSer jamrun $file $results
     fi
     echo ">>> Device started in container $dockid"
 }
@@ -213,7 +213,7 @@ make_container() {
     create_missingdir $jamfolder/$type/$contname
 
     if [ $type == "cloud" ]; then
-        startglobalmach $contname jamnet `cat $jamfolder/network`
+        startglobalmach $contname jamnet `cat $jamfolder/network` $dport $hport
         restartcloudpumba $contname
     else
         exit_missingfile $jamfolder/zones/count
@@ -223,7 +223,7 @@ make_container() {
         fi
         local zone=$(( 1 + $RANDOM % $zcount ))
 
-        startzonemach $zone $contname jamnet `cat $jamfolder/network`
+        startzonemach $zone $contname jamnet `cat $jamfolder/network` $dport $hport
         if [ $type == "fog" ]; then
             restartfogpumba $contname
         fi
@@ -322,6 +322,7 @@ link=
 loc=
 dport=
 hport=
+mount=
 
 file=$1
 shift
@@ -478,6 +479,9 @@ while :; do
         --log)
             log=1
             ;;
+        --mount)
+            mount=1
+            ;;
         --)              # End of all options.
             shift
             break
@@ -496,6 +500,13 @@ done
 
 if [ "$type" != "device" ] && [ -n "$num" ]; then
     die "number of devices can't be speciied for fog/cloud"
+fi
+
+if [ ! -z $mount ]; then
+    if [ -z ${JAMDATA} ]; then
+        echo "JAMDATA is not set. Set JAMDATA to the directory containing the datasets"
+        exit 1
+    fi
 fi
 
 # If docker is not installed, we fail here
