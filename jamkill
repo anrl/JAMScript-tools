@@ -54,6 +54,7 @@ killprocess() {
         local pid=`cat $1/shellpid`
         local present=`ps -p $pid | grep jamrun | wc -l | tr -d [:space:]`
         if [ $present == "1" ]; then
+            echo "Killing process $pid"
             kill $pid
         fi
     fi
@@ -62,12 +63,14 @@ killprocess() {
         local pid=`cat $1/processId`
         local present=`ps -p $pid | grep node | wc -l | tr -d [:space:]`
         if [ $present == "1" ]; then
+            echo "Killing process $pid"
             kill -9 $pid
         fi
 
         if [ `uname` == "Linux" ]; then
             local spid=`ps ax | grep node | grep $2 | cut -d ' ' -f 2 | tr -d [:space:]`
             if [ ! -z $spid ]; then
+                echo "Killing process $pid"
                 kill -9 $spid
             fi
         fi
@@ -80,6 +83,7 @@ killprocess() {
             echo "-" > $1/dockerId
             local count=`docker exec -it $didp jamlist | wc -l | tr -d [:space:]`
             if (( $count <= 2 )); then
+                echo "Killing docker $didp"
                 docker kill $didp
                 docker rm $didp
             fi
@@ -96,13 +100,14 @@ killjob() {
             for jexs in `ls $appsfolder/$jruns`; do
                 dir=$appsfolder/$jruns$jexs
                 if [ -d $dir ]; then
-                    local appid=`cat $dir/appid`
+                    if [ -e $dir/appid ]; then
+                        local appid=`cat $dir/appid`
 
-                    if [ $appid == $jobid ]; then
-                        echo "Killing application running at " $jexs
-                        killprocess $dir $jexs
-                        if [ -e $dir/tmuxid ]; then
-                            killtmux `cat $dir/tmuxid`
+                        if [ $appid == $jobid ]; then
+                            killprocess $dir $jexs
+                            if [ -e $dir/tmuxid ]; then
+                                killtmux `cat $dir/tmuxid`
+                            fi
                         fi
                     fi
                 fi
@@ -118,7 +123,6 @@ killalljobs() {
             for jexs in `ls $appsfolder/$jruns`; do
                 dir=$appsfolder/$jruns$jexs
                 if [ -d $dir ]; then
-                    echo "Killing application running at " $jexs
                     killprocess $dir $jexs
                     if [ -e $dir/tmuxid ]; then
                         killtmux `cat $dir/tmuxid`
