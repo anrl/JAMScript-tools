@@ -240,7 +240,7 @@ portavailable() {
             if [ $pid == "new" ]; then
                 porttaken=1
             elif [ ! -z $pid ]; then
-                porttaken=`ps -o pid= -p $pid | wc -l | tr -d [:space:]`
+                porttaken=`ps -o pid= -p $pid | wc -l | tr -d '[:space:]'`
             else
                 porttaken=0
             fi
@@ -314,7 +314,7 @@ waitforredis() {
     local port=$1
 
     while : ; do
-        local present=`ps ax | grep redis-server | grep $port | wc -l | tr -d [:space:]`
+        local present=`ps ax | grep redis-server | grep $port | wc -l | tr -d '[:space:]'`
         if [ $present == "1" ]; then
             break
         fi
@@ -338,7 +338,7 @@ resolvedata() {
         name=$ipaddr:$port
     fi
     # trim space left behind by hostname -I
-    data=$(echo $name | tr -d [:space:])
+    data=$(echo $name | tr -d '[:space:]')
 }
 
 

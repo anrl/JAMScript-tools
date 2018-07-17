@@ -73,11 +73,11 @@ dockertmux() {
             for jexs in `ls $appsfolder/$jruns`; do
                 dir=$appsfolder/$jruns$jexs
                 if [ -d $dir ] && [ -e $dir/class ]; then
-                    local dcl=`cat $dir/class | tr -d [:space:]`
+                    local dcl=`cat $dir/class | tr -d '[:space:]'`
 
                     if [ $dcl == "docker" ]; then
                         if [ -e $dir/tmuxid_c ]; then
-                            local dtm=`cat $dir/tmuxid_c | tr -d [:space:]`
+                            local dtm=`cat $dir/tmuxid_c | tr -d '[:space:]'`
                             if [ $dtm == $tmuxapp ]; then
                                 docker exec -ti `cat $dir/dockerId` script -q -c "/usr/bin/tmux attach -t $tmuxapp-$termno" /dev/null
                                 break

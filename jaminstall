@@ -44,7 +44,7 @@ killprocess() {
 
     if [ -e $1/shellpid ]; then
         local pid=`cat $1/shellpid`
-        local present=`ps -p $pid | grep jamrun | wc -l | tr -d [:space:]`
+        local present=`ps -p $pid | grep jamrun | wc -l | tr -d '[:space:]'`
         if [ $present == "1" ]; then
             kill $pid
         fi
@@ -52,13 +52,13 @@ killprocess() {
 
     if [ -e $1/processId ]; then
         local pid=`cat $1/processId`
-        local present=`ps -p $pid | grep node | wc -l | tr -d [:space:]`
+        local present=`ps -p $pid | grep node | wc -l | tr -d '[:space:]'`
         if [ $present == "1" ]; then
             kill -9 $pid
         fi
     elif [ -e $1/dockerId ]; then
         local didp=`cat $1/dockerId`
-        local present=`docker ps --filter id=$didp | grep $didp | wc -l | tr -d [:space:]`
+        local present=`docker ps --filter id=$didp | grep $didp | wc -l | tr -d '[:space:]'`
         if [ $present == "1" ]; then
             docker kill $didp
             docker rm $didp

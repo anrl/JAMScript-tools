@@ -37,21 +37,14 @@ make_container() {
     create_missingdir $jamfolder/type
     create_missingdir $jamfolder/type/contname
 
-    # Check if the build container is running..
-    present=`docker ps --filter name=$contname | grep $contname | wc -l | tr -d '[:space:]'`
-    if [ $present == "0" ]; then
-        # Otherwise check if an older run is there..
-        present=`docker ps -a --filter name=$contname | grep $contname | wc -l | tr -d '[:space:]'`
-        if [ $present == "1" ]; then
-            docker rm $contname
-        fi
-        local dockerSer=`docker run -it -d --privileged --name $contname $dockerImage`
-        local dockerSer=${dockerSer:0:12}
-        echo $dockerSer > $jamfolder/type/contname/dockerId
-        echo "1" > $jamfolder/type/contname/refCount
-    else
-        inc_counter $jamfolder/type/contname/refCount
-    fi
+    # Just kill the older container and recreate a new one.
+    docker kill $contname
+    docker rm $contname
+
+    local dockerSer=`docker run -it -d --privileged --name $contname $dockerImage`
+    local dockerSer=${dockerSer:0:12}
+    echo $dockerSer > $jamfolder/type/contname/dockerId
+    echo "1" > $jamfolder/type/contname/refCount
 }
 
 jamfolder=$HOME"/__jamruns"

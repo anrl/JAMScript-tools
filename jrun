@@ -120,7 +120,7 @@ resolvedocker() {
         name=$ipaddr:$port
     fi
     # trim space left behind by hostname -I
-    data=$(echo $name | tr -d [:space:])
+    data=$(echo $name | tr -d '[:space:]')
 }
 
 

@@ -8,7 +8,7 @@ createnetwork() {
     local folder=$3
 
     while : ; do
-        local present=`docker network ls | grep $netname | wc -l | tr -d [:space:]`
+        local present=`docker network ls | grep $netname | wc -l | tr -d '[:space:]'`
         if [ $present == "0" ]; then
             docker network create --driver=bridge --subnet=10.$subnet.0.0/16 --ip-range=10.$subnet.0.0/16 $netname
             if [ $? != 0 ]; then

@@ -195,7 +195,7 @@ getdockerid() {
     local count=$result
     dockerid="u-"$UID"-${type:0:3}-"$count
 
-    if [ -z $rundock ] || [ `docker ps --filter id=$rundock | grep $rundock | wc -l | tr -d [:space:]` == "0" ]; then
+    if [ -z $rundock ] || [ `docker ps --filter id=$rundock | grep $rundock | wc -l | tr -d '[:space:]'` == "0" ]; then
         result="new"
     else
         dockerSer=$rundock
