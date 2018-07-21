@@ -2,7 +2,7 @@
 
 IDIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$IDIR" ]]; then IDIR="$PWD"; fi
-source "$IDIR/inc/pumba_tools.sh"
+#source "$IDIR/inc/pumba_tools.sh"
 source "$IDIR/inc/mach_tools.sh"
 source "$IDIR/inc/misc_tools.sh"
 source "$IDIR/inc/docker_tools.sh"
@@ -214,7 +214,7 @@ make_container() {
 
     if [ $type == "cloud" ]; then
         startglobalmach $contname jamnet `cat $jamfolder/network` $dport $hport
-        restartcloudpumba $contname
+#        restartcloudpumba $contname
     else
         exit_missingfile $jamfolder/zones/count
         local zcount=`cat $jamfolder/zones/count`
@@ -224,9 +224,9 @@ make_container() {
         local zone=$(( 1 + $RANDOM % $zcount ))
 
         startzonemach $zone $contname jamnet `cat $jamfolder/network` $dport $hport
-        if [ $type == "fog" ]; then
-            restartfogpumba $contname
-        fi
+#        if [ $type == "fog" ]; then
+#            restartfogpumba $contname
+#        fi
     fi
 
     save $result $jamfolder/$type/$contname/dockerId
@@ -250,7 +250,7 @@ createzonerouters() {
 
     for i in `seq 1 $zcount`; do
         startzonerouter $i "u-$UID-router-$i" jamnet `cat $jamfolder/network`
-        restartrouterpumba "u-$UID-router-$i"
+#        restartrouterpumba "u-$UID-router-$i"
     done
 }
 
@@ -511,7 +511,7 @@ fi
 
 # If docker is not installed, we fail here
 check_prog docker "Docker not installed. Exiting."
-check_prog pumba "Pumba not installed. Download it from https://github.com/gaia-adm/pumba/releases"
+#check_prog pumba "Pumba not installed. Download it from https://github.com/gaia-adm/pumba/releases"
 check_prog tmux "tmux not installed. Exiting."
 
 # Check whether the global __jamruns folder is there
@@ -520,7 +520,7 @@ exit_missingdir $jamfolder "__jamdir directory not found. Run djam pull first. "
 exit_missingdir $jamfolder/zones "zones not setup. Run djam init first"
 exit_missingfile $jamfolder/dockerImage "DockerImage not setup. Run djam pull first."
 
-pumbastatus=`cat $jamfolder/pumba/status`
+#pumbastatus=`cat $jamfolder/pumba/status`
 
 appfolder=$jamfolder/apps
 create_missingdir $appfolder
