@@ -564,7 +564,7 @@ if [ -e "$file" ]; then
         reuse_container $type $dockerid
     fi
 
-    docker cp $file $dockerSer:`basename $file`
+    docker cp $file $dockerSer:/home/admin/temp/`basename $file`
     dojamrun $type $dockerid `basename $file` $num
     if [ -z $bg ] && [ $docktype == "new" ]; then
         removedockermach
