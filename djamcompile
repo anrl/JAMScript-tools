@@ -54,6 +54,7 @@ exit_missingfile $jamfolder/dockerImage "Run djam pull repository"
 dbuildc="dbuildctnr-"$UID
 make_container test $dbuildc
 
+ddd=
 for f in $@; do
     docker cp $f $dbuildc:$f
 done
