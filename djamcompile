@@ -54,13 +54,14 @@ exit_missingfile $jamfolder/dockerImage "Run djam pull repository"
 dbuildc="dbuildctnr-"$UID
 make_container test $dbuildc
 
-ddd=
+efile=
 for f in $@; do
-    docker cp $f $dbuildc:$f
+    docker cp $f $dbuildc:/home/admin/temp/$f
+    efile+=" /home/admin/temp/$f"
 done
 
 
-docker exec -it $dbuildc jamc $@
+docker exec -it $dbuildc jamc $efile
 filename=$1
 jxefile="${filename%.*}.jxe"
-docker cp $dbuildc:$jxefile $jxefile
+docker cp $dbuildc:/home/admin/temp/$jxefile $jxefile
