@@ -56,10 +56,13 @@ make_container test $dbuildc
 
 efile=
 for f in $@; do
-    docker cp $f $dbuildc:/home/admin/temp/$f
-    efile+=" /home/admin/temp/$f"
+    if [ $f != "-d" ]; then
+        docker cp $f $dbuildc:/home/admin/temp/$f
+        efile+=" /home/admin/temp/$f"
+    else
+        efile+=" -d"
+    fi
 done
-
 
 docker exec -it $dbuildc jamc $efile
 filename=$1
